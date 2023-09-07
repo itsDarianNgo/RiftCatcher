@@ -1,4 +1,4 @@
-package com.darianngo.RiftCatcher.entity;
+package com.darianngo.RiftCatcher.entities;
 
 import java.time.LocalDateTime;
 import java.util.List;

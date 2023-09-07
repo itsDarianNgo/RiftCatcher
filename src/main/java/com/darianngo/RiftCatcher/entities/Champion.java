@@ -1,4 +1,4 @@
-package com.darianngo.RiftCatcher.entity;
+package com.darianngo.RiftCatcher.entities;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

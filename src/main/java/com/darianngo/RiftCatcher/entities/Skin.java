@@ -1,4 +1,4 @@
-package com.darianngo.RiftCatcher.entity;
+package com.darianngo.RiftCatcher.entities;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,16 +10,17 @@ import lombok.Data;
 
 @Entity
 @Data
-@Table(name = "chromas")
-public class Chroma {
+@Table(name = "skins")
+public class Skin {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
 	@ManyToOne
-	private Skin skin;
+	private Champion champion;
 
-	private String color;
+	private String name;
+	private String rarity;
 	private String description;
 	private String imageUrl;
 }

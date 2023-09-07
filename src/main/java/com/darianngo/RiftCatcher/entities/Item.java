@@ -1,4 +1,6 @@
-package com.darianngo.RiftCatcher.entity;
+package com.darianngo.RiftCatcher.entities;
+
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -15,6 +17,9 @@ public class Item {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	private String type; // Enum type for Skin, Chroma, etc.
+	private Long referenceId; // Corresponding ID from the Skin or Chroma table or any other item type
 	private String name;
-	private String type; // e.g., Weapon, Potion
+	private Integer price;
+	private LocalDateTime rotationEndTime; // Time until this item is available in the shop
 }

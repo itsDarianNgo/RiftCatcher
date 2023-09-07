@@ -1,4 +1,6 @@
-package com.darianngo.RiftCatcher.entity;
+package com.darianngo.RiftCatcher.entities;
+
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,20 +12,18 @@ import lombok.Data;
 
 @Entity
 @Data
-@Table(name = "caught_champions")
-public class CaughtChampion {
+@Table(name = "spawn_events")
+public class SpawnEvent {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
 	@ManyToOne
-	private User user;
-
-	@ManyToOne
 	private Champion champion;
 
-	private String skin;
-	private Integer level;
-	private Integer health;
-	private Integer mana;
+	private LocalDateTime spawnTime;
+	private LocalDateTime endTime;
+	private Boolean isCaught;
+	private String discordChannelId;
+	private String catchingUserId;
 }
