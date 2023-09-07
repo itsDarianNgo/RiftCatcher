@@ -20,7 +20,7 @@ public class Skin {
 	private Champion champion;
 
 	private String name;
-	private String rarity;
+	private String rarity; // Common, Rare, Epic, Legendary, Mythic, Ultimate
 	private String description;
 	private String imageUrl;
 }

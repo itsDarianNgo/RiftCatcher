@@ -9,5 +9,5 @@ import com.darianngo.RiftCatcher.entities.CaughtChampion;
 
 @Repository
 public interface CaughtChampionRepository extends JpaRepository<CaughtChampion, Long> {
-	List<CaughtChampion> findByUserId(String userId);
+	List<CaughtChampion> findByUser_Id(Long userId);
 }

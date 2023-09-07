@@ -11,10 +11,11 @@ import lombok.Data;
 @Data
 @Table(name = "champions")
 public class Champion {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private String name;
-    private String rarity;  // Enum type for Common, Rare, Epic, Legendary
-    private String lore;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+	private String name;
+	private String rarity; // Enum type for Common, Rare, Epic, Legendary
+	private String lore;
+	private Integer spawnWeight;
 }
