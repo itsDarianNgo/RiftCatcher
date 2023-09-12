@@ -27,7 +27,7 @@ public class User {
 	private String discordName;
 	private LocalDateTime lastCatchTime; // For cooldowns
 	private Integer championsCaught;
-	private Integer points; // For shop
+	private Integer gold; // For shop
 
 	@OneToMany(mappedBy = "user")
 	private List<CaughtChampion> caughtChampions;

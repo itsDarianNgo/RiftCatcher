@@ -1,36 +1,65 @@
 package com.darianngo.RiftCatcher.services;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.darianngo.RiftCatcher.entities.ServerChannel;
+import com.darianngo.RiftCatcher.repositories.ServerChannelRepository;
 
 @Service
 public class ServerConfigService {
-	// Mapping between Discord server ID and a list of channel IDs
-	private final Map<String, List<String>> serverChannelMapping = new HashMap<>();
 
+	@Autowired
+	private ServerChannelRepository serverChannelRepository;
+
+	@Transactional
 	public void enableSpawning(String serverId, String channelId) {
-		serverChannelMapping.computeIfAbsent(serverId, k -> new ArrayList<>()).add(channelId);
+		ServerChannel serverChannel = serverChannelRepository.findByDiscordServerIdAndDiscordChannelId(serverId,
+				channelId);
+		if (serverChannel == null) {
+			serverChannel = new ServerChannel();
+			serverChannel.setDiscordServerId(serverId);
+			serverChannel.setDiscordChannelId(channelId);
+			serverChannel.setCreatedAt(LocalDateTime.now());
+		}
+		serverChannel.setEnabled(true);
+		serverChannel.setUpdatedAt(LocalDateTime.now());
+		serverChannelRepository.save(serverChannel);
 	}
 
+	@Transactional
 	public void disableSpawning(String serverId, String channelId) {
-		List<String> channels = serverChannelMapping.get(serverId);
-		if (channels != null) {
-			channels.remove(channelId);
+		ServerChannel serverChannel = serverChannelRepository.findByDiscordServerIdAndDiscordChannelId(serverId,
+				channelId);
+		if (serverChannel != null) {
+			serverChannel.setEnabled(false);
+			serverChannel.setUpdatedAt(LocalDateTime.now());
+			serverChannelRepository.save(serverChannel);
 		}
 	}
 
 	public List<String> getEnabledChannels(String serverId) {
-		return serverChannelMapping.getOrDefault(serverId, Collections.emptyList());
+		List<ServerChannel> serverChannels = serverChannelRepository.findAllByDiscordServerIdAndIsEnabledTrue(serverId);
+		List<String> enabledChannels = new ArrayList<>();
+		for (ServerChannel sc : serverChannels) {
+			enabledChannels.add(sc.getDiscordChannelId());
+		}
+		return enabledChannels;
 	}
 
 	public Set<String> getServerIds() {
-		return serverChannelMapping.keySet();
+		List<ServerChannel> allEnabledChannels = serverChannelRepository.findAllByIsEnabledTrue();
+		Set<String> serverIds = new HashSet<>();
+		for (ServerChannel sc : allEnabledChannels) {
+			serverIds.add(sc.getDiscordServerId());
+		}
+		return serverIds;
 	}
-
 }

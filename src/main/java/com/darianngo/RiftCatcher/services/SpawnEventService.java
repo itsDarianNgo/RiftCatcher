@@ -14,9 +14,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.darianngo.RiftCatcher.entities.Champion;
+import com.darianngo.RiftCatcher.entities.ServerChannel;
 import com.darianngo.RiftCatcher.entities.Skin;
 import com.darianngo.RiftCatcher.entities.SpawnEvent;
 import com.darianngo.RiftCatcher.repositories.ChampionRepository;
+import com.darianngo.RiftCatcher.repositories.ServerChannelRepository;
 import com.darianngo.RiftCatcher.repositories.SkinRepository;
 import com.darianngo.RiftCatcher.repositories.SpawnEventRepository;
 import com.darianngo.RiftCatcher.utils.RaritySelector;
@@ -38,6 +40,9 @@ public class SpawnEventService {
 	private SpawnEventRepository spawnEventRepository;
 
 	@Autowired
+	private ServerChannelRepository serverChannelRepository;
+
+	@Autowired
 	private JDA jda;
 
 	@Autowired
@@ -48,16 +53,24 @@ public class SpawnEventService {
 
 	private static final Logger logger = LoggerFactory.getLogger(SpawnEventService.class);
 
-	@Scheduled(fixedRate = 60000) // Spawns every 1 minute
+	@Scheduled(fixedRate = 120000) // Spawns every 1 minute
 	public void spawnChampion() {
 		logger.debug("Attempting to spawn a champion...");
+
+		// Select champion and skin based on rarity
 		String championRarity = selectChampionRarity();
 		Champion selectedChampion = selectChampionByRarity(championRarity);
-
 		String skinRarity = selectSkinRarity();
 		Skin selectedSkin = selectSkinByRarity(selectedChampion, skinRarity);
 
-		announceAndSaveSpawn(selectedChampion, selectedSkin);
+		// Fetch all enabled channel IDs from the database
+		List<ServerChannel> serverChannels = serverChannelRepository.findAllByIsEnabledTrue();
+
+		// Loop through each channel and spawn the champion
+		for (ServerChannel serverChannel : serverChannels) {
+			String channelId = serverChannel.getDiscordChannelId();
+			announceAndSaveSpawn(selectedChampion, selectedSkin, channelId);
+		}
 	}
 
 	private String selectChampionRarity() {
@@ -82,13 +95,16 @@ public class SpawnEventService {
 		return raritySelector.weightedRandomSelection(skinRarityWeights);
 	}
 
-	private void announceAndSaveSpawn(Champion champion, Skin skin) {
+	private void announceAndSaveSpawn(Champion champion, Skin skin, String channelId) {
 		SpawnEvent spawnEvent = new SpawnEvent();
 		spawnEvent.setChampion(champion);
 		spawnEvent.setSkin(skin);
 		spawnEvent.setSpawnTime(LocalDateTime.now());
-		spawnEvent.setEndTime(LocalDateTime.now().plusMinutes(5));
-		spawnEvent.setIsCaught(false);
+		spawnEvent.setEndTime(LocalDateTime.now().plusMinutes(2));
+
+		// Set the Discord channel ID where this spawn event should take place
+		spawnEvent.setDiscordChannelId(channelId);
+
 		spawnEventRepository.save(spawnEvent);
 
 		// Create an EmbedBuilder instance
@@ -104,20 +120,19 @@ public class SpawnEventService {
 		embedBuilder.addField("Skin", skin.getName(), true);
 		embedBuilder.addField("Rarity", skin.getRarity(), true);
 
-		// Add an image (could be the champion's thumbnail)
-		// embedBuilder.setThumbnail("URL_OF_THE_IMAGE");
-
 		// Build the embed
 		MessageEmbed messageEmbed = embedBuilder.build();
 
-		// Announce in all enabled channels for all servers
-		for (String serverId : serverConfigService.getServerIds()) {
-			List<String> channels = serverConfigService.getEnabledChannels(serverId);
-			for (String channelId : channels) {
-				TextChannel channel = jda.getTextChannelById(channelId);
-				// Send the embed message
-				channel.sendMessageEmbeds(messageEmbed).queue();
-			}
+		// Get the specific TextChannel by its ID
+		TextChannel channel = jda.getTextChannelById(channelId);
+
+		// Check if the channel exists (double checking)
+		if (channel != null) {
+			// Send the embed message to this specific channel
+			channel.sendMessageEmbeds(messageEmbed).queue();
+		} else {
+			// Log an error or handle this case appropriately
+			logger.error("Channel with ID " + channelId + " not found.");
 		}
 	}
 
