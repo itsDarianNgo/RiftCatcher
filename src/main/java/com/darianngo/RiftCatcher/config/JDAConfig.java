@@ -9,7 +9,6 @@ import org.springframework.context.annotation.PropertySource;
 
 import com.darianngo.RiftCatcher.listeners.AdminSlashCommandListener;
 import com.darianngo.RiftCatcher.listeners.CatchCommandListener;
-import com.darianngo.RiftCatcher.listeners.CommandListener;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -23,12 +22,12 @@ public class JDAConfig {
 	private String botToken;
 
 	@Bean
-	public JDA jda(AdminSlashCommandListener adminSlashCommandListener, CatchCommandListener catchCommandListener,
-			CommandListener commandListener) throws LoginException {
+	public JDA jda(AdminSlashCommandListener adminSlashCommandListener, CatchCommandListener catchCommandListener)
+			throws LoginException {
 		JDA jda = JDABuilder.createDefault(botToken)
 				.enableIntents(GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MESSAGE_REACTIONS,
 						GatewayIntent.MESSAGE_CONTENT)
-				.addEventListeners(adminSlashCommandListener, catchCommandListener, commandListener).build();
+				.addEventListeners(adminSlashCommandListener, catchCommandListener).build();
 
 		// Register slash commands after the JDA instance is built
 		registerSlashCommands(jda);

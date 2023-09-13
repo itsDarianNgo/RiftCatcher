@@ -10,15 +10,12 @@ import org.springframework.stereotype.Component;
 import com.darianngo.RiftCatcher.entities.SpawnEvent;
 import com.darianngo.RiftCatcher.repositories.SpawnEventRepository;
 import com.darianngo.RiftCatcher.repositories.UserRepository;
-import com.darianngo.RiftCatcher.services.CatchCommandService;
 
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 @Component
 public class CatchCommandListener extends ListenerAdapter {
-	@Autowired
-	private CatchCommandService catchCommandService;
 	@Autowired
 	private SpawnEventRepository spawnEventRepository;
 	@Autowired
@@ -56,11 +53,11 @@ public class CatchCommandListener extends ListenerAdapter {
 				System.out.println("Spawn event found: " + spawnEventOpt.get().getId());
 
 				// Delegate the actual catching logic to CatchCommandService
-				catchCommandService.handleCatchCommand(userId, championName, spawnEventId, serverId, channelId);
+//				catchCommandService.handleCatchCommand(userId, championName, spawnEventId, serverId, channelId);
 			} else {
 				// Handle case when there is no active spawn event
-				System.out.println(
-						"No spawn event found for channelId: " + channelId + " and championName: " + championName + " and serverID: " + serverId);
+				System.out.println("No spawn event found for channelId: " + channelId + " and championName: "
+						+ championName + " and serverID: " + serverId);
 			}
 		}
 	}

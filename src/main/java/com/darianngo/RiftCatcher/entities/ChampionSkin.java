@@ -5,22 +5,23 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 import lombok.Data;
 
 @Entity
 @Data
-@Table(name = "skins")
-public class Skin {
+public class ChampionSkin {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
 	@ManyToOne
-	private Champion champion;
+	private Champion champion; // The champion this skin is currently applied to
 
 	private String name;
-	private String rarity; // Common, Rare, Epic, Legendary, Mythic, Ultimate
 	private String description;
 	private String imageUrl;
+
+	@ManyToOne
+	private ChampionSkinRarity skinRarity; // Common, Rare, Epic, Legendary, Mythic, Ultimate
+
 }

@@ -24,7 +24,7 @@ public class SpawnEvent {
 	private Champion champion;
 	
 	@ManyToOne
-	private Skin skin;
+	private ChampionSkin skin;
 
 	private LocalDateTime spawnTime;
 	private LocalDateTime endTime;
