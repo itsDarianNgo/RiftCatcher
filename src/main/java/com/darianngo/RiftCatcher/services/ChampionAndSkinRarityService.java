@@ -81,10 +81,10 @@ public class ChampionAndSkinRarityService extends ListenerAdapter {
 		Map<String, Double> rarityProbabilities = new HashMap<>();
 
 		// Base probabilities (these could be adjusted)
-		double commonProb = 0.6;
-		double uncommonProb = 0.3;
-		double rareProb = 0.08;
-		double legendaryProb = 0.02;
+		double commonProb = 0.80; // 80%
+		double uncommonProb = 0.15; // 15%
+		double rareProb = 0.03; // 3%
+		double legendaryProb = 0.02; // 2%
 
 		// 1. Time-based adjustments
 		LocalTime now = LocalTime.now();
@@ -205,18 +205,18 @@ public class ChampionAndSkinRarityService extends ListenerAdapter {
 		Map<String, Double> skinRarityProbabilities = new HashMap<>();
 
 		// Base probabilities (these could be adjusted)
-		double commonProb = 0.55;
-		double rareProb = 0.25;
-		double epicProb = 0.1;
-		double legendaryProb = 0.05;
-		double mythicProb = 0.03;
-		double ultimateProb = 0.02;
+		double commonProb = 0.92; // 92%
+		double rareProb = 0.05; // 5%
+		double epicProb = 0.02; // 2%
+		double legendaryProb = 0.005; // 0.5%
+		double mythicProb = 0.0025; // 0.25%
+		double ultimateProb = 0.0005; // 0.05%
 
 		// 1. Champion Rarity-based adjustments
 		if ("LEGENDARY".equals(champion.getRarity().getRarity())) {
 			// Legendary champions boost the chance of ultimate and mythic skins
-			ultimateProb *= 1.5;
-			mythicProb *= 1.2;
+			ultimateProb *= 1.0;
+			mythicProb *= 1.0;
 		}
 
 		// 2. Time-based adjustments
