@@ -29,6 +29,18 @@ public class User {
 	private Integer championsCaught;
 	private Integer gold; // For shop
 
+	@Column(name = "level")
+	private Integer level = 1; // Default to level 1 for new users
+
+	@Column(name = "xp")
+	private Integer xp = 0; // Experience points for leveling up
+
 	@OneToMany(mappedBy = "user")
 	private List<CaughtChampion> caughtChampions;
+
+	@Column(name = "first_interaction_time")
+	private LocalDateTime firstInteractionTime; // Time when the user first interacted with the bot
+
+	@Column(name = "has_signed_up")
+	private Boolean hasSignedUp = false; // Flag to track if the user has completed the signup process
 }
