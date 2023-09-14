@@ -1,6 +1,5 @@
 package com.darianngo.RiftCatcher.services;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,7 +9,6 @@ import org.springframework.stereotype.Service;
 
 import com.darianngo.RiftCatcher.entities.Champion;
 import com.darianngo.RiftCatcher.entities.SpawnEvent;
-import com.darianngo.RiftCatcher.entities.User;
 import com.darianngo.RiftCatcher.repositories.ChampionRepository;
 import com.darianngo.RiftCatcher.repositories.SpawnEventRepository;
 import com.darianngo.RiftCatcher.repositories.UserRepository;
@@ -38,19 +36,6 @@ public class ChampionCatchingService {
 
 	public void handleCommand(MessageReceivedEvent event) {
 		String userId = event.getAuthor().getId();
-		User user = userRepository.findByDiscordId(userId);
-
-		if (user == null) {
-			// Create a new user with default values
-			user = createUser(event.getAuthor());
-		}
-
-		if (!user.getHasSignedUp()) {
-			event.getChannel().sendMessage(event.getAuthor().getAsMention()
-					+ " In the vast world of Runeterra, every summoner starts with a trusty champion by their side. Select yours with `@RiftCatcher Start` and begin your journey!")
-					.queue();
-			return;
-		}
 		long currentTime = System.currentTimeMillis();
 
 		// Check for cooldown
@@ -109,14 +94,6 @@ public class ChampionCatchingService {
 			// The champion "flees" but is still available for others to attempt to catch
 			event.getChannel().sendMessage(champion.getName() + " escaped! Better luck next time.").queue();
 		}
-	}
-
-	private User createUser(net.dv8tion.jda.api.entities.User discordUser) {
-		User newUser = new User();
-		newUser.setDiscordId(discordUser.getId());
-		newUser.setDiscordName(discordUser.getName());
-		newUser.setFirstInteractionTime(LocalDateTime.now());
-		return userRepository.save(newUser);
 	}
 
 }
