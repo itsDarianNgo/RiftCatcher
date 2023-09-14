@@ -14,11 +14,14 @@ import com.darianngo.RiftCatcher.entities.Champion;
 import com.darianngo.RiftCatcher.entities.ChampionRarity;
 import com.darianngo.RiftCatcher.entities.ChampionSkin;
 import com.darianngo.RiftCatcher.entities.ChampionSkinRarity;
+import com.darianngo.RiftCatcher.entities.SpawnedChampion;
 import com.darianngo.RiftCatcher.repositories.ChampionRarityRepository;
 import com.darianngo.RiftCatcher.repositories.ChampionRepository;
 import com.darianngo.RiftCatcher.repositories.ChampionSkinRarityRepository;
 import com.darianngo.RiftCatcher.repositories.ChampionSkinRepository;
+import com.darianngo.RiftCatcher.repositories.SpawnedChampionRepository;
 
+import jakarta.transaction.Transactional;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 @Service
@@ -36,6 +39,9 @@ public class ChampionAndSkinRarityService extends ListenerAdapter {
 	@Autowired
 	private ChampionSkinRarityRepository championSkinRarityRepository;
 
+	@Autowired
+	private SpawnedChampionRepository spawnedChampionRepository;
+
 	private Champion lastSpawnedChampion;
 
 	private ChampionSkinRarity lastSpawnedSkinRarity;
@@ -48,26 +54,29 @@ public class ChampionAndSkinRarityService extends ListenerAdapter {
 
 	private static final Logger logger = LoggerFactory.getLogger(ChampionAndSkinRarityService.class);
 
-	public Champion spawnChampion() {
+	@Transactional
+	public SpawnedChampion spawnChampion() {
 
 		// Step 1: Determine Champion Rarity
 		ChampionRarity chosenRarity = determineChampionRarity();
 
 		// Step 2: Fetch Random Champion of the Chosen Rarity
-		Champion champion = getRandomChampionByRarity(chosenRarity);
+		Champion baseChampion = getRandomChampionByRarity(chosenRarity);
 
 		// Step 3: Determine Skin Rarity
-		ChampionSkinRarity skinRarity = determineSkinRarity(champion);
+		ChampionSkinRarity skinRarity = determineSkinRarity(baseChampion);
 
 		// Step 4: Fetch Random Skin of the Chosen Rarity for Champion
-		ChampionSkin skin = getRandomSkinByRarity(champion, skinRarity);
+		ChampionSkin skin = getRandomSkinByRarity(baseChampion, skinRarity);
 
-		champion.setCurrentSkin(skin);
-		skin.setChampion(champion);
-		championSkinRepository.save(skin);
-		championRepository.save(champion);
+		// Create and save a SpawnedChampion
+		SpawnedChampion spawnedChampion = new SpawnedChampion();
+		spawnedChampion.setBaseChampion(baseChampion);
+		spawnedChampion.setCurrentSkin(skin);
+		logger.info("Saved spawned champion skin: " + spawnedChampion.getCurrentSkin().getName());
+		spawnedChampion = spawnedChampionRepository.save(spawnedChampion);
 
-		return champion;
+		return spawnedChampion;
 	}
 
 	// Logic to determine the rarity of the champion to be spawned
@@ -213,11 +222,11 @@ public class ChampionAndSkinRarityService extends ListenerAdapter {
 		double ultimateProb = 0.0005; // 0.05%
 
 		// 1. Champion Rarity-based adjustments
-		if ("LEGENDARY".equals(champion.getRarity().getRarity())) {
-			// Legendary champions boost the chance of ultimate and mythic skins
-			ultimateProb *= 1.0;
-			mythicProb *= 1.0;
-		}
+//		if ("LEGENDARY".equals(champion.getRarity().getRarity())) {
+//			// Legendary champions boost the chance of ultimate and mythic skins
+//			ultimateProb *= 1.0;
+//			mythicProb *= 1.0;
+//		}
 
 		// 2. Time-based adjustments
 		LocalTime now = LocalTime.now();

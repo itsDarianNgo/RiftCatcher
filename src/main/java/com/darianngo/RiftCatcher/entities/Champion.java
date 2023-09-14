@@ -3,6 +3,7 @@ package com.darianngo.RiftCatcher.entities;
 import java.util.Objects;
 import java.util.Set;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -10,7 +11,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import lombok.Data;
 
 @Data
@@ -39,14 +39,13 @@ public class Champion {
 	@ManyToMany
 	private Set<SummonerSpell> summonerSpells;
 
-	@OneToMany(mappedBy = "champion")
+	@OneToMany(mappedBy = "champion", cascade = CascadeType.ALL)
 	private Set<ChampionSkin> skins;
 
 	@ManyToMany
 	private Set<Role> roles;
 
-	@OneToOne
-	private ChampionSkin currentSkin; // The currently selected or spawned skin
+	private String ownerId; // The Discord ID of the user who caught the champion
 
 	// Manually define hashCode and equals to ignore the runes, summonerSpells,
 	// stats, iv, and roles fields

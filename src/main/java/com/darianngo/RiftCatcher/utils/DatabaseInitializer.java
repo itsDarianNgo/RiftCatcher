@@ -11,10 +11,12 @@ import com.darianngo.RiftCatcher.entities.Champion;
 import com.darianngo.RiftCatcher.entities.ChampionRarity;
 import com.darianngo.RiftCatcher.entities.ChampionSkin;
 import com.darianngo.RiftCatcher.entities.ChampionSkinRarity;
+import com.darianngo.RiftCatcher.entities.SpawnedChampion;
 import com.darianngo.RiftCatcher.repositories.ChampionRarityRepository;
 import com.darianngo.RiftCatcher.repositories.ChampionRepository;
 import com.darianngo.RiftCatcher.repositories.ChampionSkinRarityRepository;
 import com.darianngo.RiftCatcher.repositories.ChampionSkinRepository;
+import com.darianngo.RiftCatcher.repositories.SpawnedChampionRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -33,6 +35,9 @@ public class DatabaseInitializer implements CommandLineRunner {
 
 	@Autowired
 	private ChampionSkinRarityRepository championSkinRarityRepository;
+
+	@Autowired
+	private SpawnedChampionRepository spawnedChampionRepository;
 
 	@Override
 	public void run(String... args) throws Exception {
@@ -101,9 +106,11 @@ public class DatabaseInitializer implements CommandLineRunner {
 			skin2 = championSkinRepository.saveAndFlush(skin2); // Save and retrieve to get generated ID
 		}
 
-		// Set the current skin for the champion to the first one created
-		champion.setCurrentSkin(firstSkin);
-		championRepository.saveAndFlush(champion); // Save again to update the currentSkin field
+		// Create a SpawnedChampion and set its currentSkin
+		SpawnedChampion spawnedChampion = new SpawnedChampion();
+		spawnedChampion.setBaseChampion(champion);
+		spawnedChampion.setCurrentSkin(firstSkin);
+		spawnedChampionRepository.saveAndFlush(spawnedChampion);
 	}
 
 }

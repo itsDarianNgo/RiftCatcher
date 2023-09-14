@@ -1,16 +1,25 @@
 package com.darianngo.RiftCatcher.services;
 
 import java.awt.Color;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import com.darianngo.RiftCatcher.entities.Champion;
+import com.darianngo.RiftCatcher.dtos.ChampionDTO;
+import com.darianngo.RiftCatcher.entities.SpawnEvent;
+import com.darianngo.RiftCatcher.entities.SpawnedChampion;
+import com.darianngo.RiftCatcher.mappers.ChampionMapper;
+import com.darianngo.RiftCatcher.mappers.SpawnEventMapper;
+import com.darianngo.RiftCatcher.repositories.SpawnEventRepository;
 
+import jakarta.transaction.Transactional;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -28,6 +37,17 @@ public class ChampionSpawningService {
 	@Autowired
 	private ServerConfigService serverConfigService;
 
+	@Autowired
+	private SpawnEventRepository spawnEventRepository;
+
+	@Autowired
+	private ChampionMapper championMapper;
+
+	@Autowired
+	private SpawnEventMapper spawnEventMapper;
+
+	private static final Logger logger = LoggerFactory.getLogger(ChampionSpawningService.class);
+
 	// Map to keep track of last spawn time for each channel
 	private HashMap<String, Long> lastSpawnTimeMap = new HashMap<>();
 
@@ -39,6 +59,7 @@ public class ChampionSpawningService {
 
 	// Randomly spawn champions in enabled channels
 	@Scheduled(fixedRate = 60000) // 1 minute = 60,000 milliseconds
+	@Transactional // Ensuring atomicity
 	public void spawnChampion() {
 		System.out.println("Spawning champion...");
 		for (TextChannel channel : jda.getTextChannels()) {
@@ -55,10 +76,23 @@ public class ChampionSpawningService {
 
 			if (currentTime - lastSpawnTime + randomDelay >= 60000) {
 				// It's time to spawn a new champion
-				Champion champion = championAndSkinRarityService.spawnChampion();
+				SpawnedChampion champion = championAndSkinRarityService.spawnChampion();
+
+				// Create a new SpawnEvent entry
+				SpawnEvent spawnEvent = new SpawnEvent();
+				spawnEvent.setSpawnedChampion(champion);
+				spawnEvent.setSpawnTime(LocalDateTime.now());
+				spawnEvent.setDiscordChannelId(channel.getId());
+				spawnEvent.setDiscordServerId(serverId);
+				SpawnEvent savedSpawnEvent = spawnEventRepository.saveAndFlush(spawnEvent); // Save and get the saved
+																							// entity
+
+				// Convert saved entities to DTOs
+				ChampionDTO championDTO = championMapper.spawnedChampionToChampionDTO(champion);
+				logger.info("Mapped champion skin name: " + championDTO.getCurrentSkinName());
 
 				// Create and send the embed
-				MessageEmbed messageEmbed = createChampionEmbed(champion);
+				MessageEmbed messageEmbed = createChampionEmbed(championDTO);
 				channel.sendMessageEmbeds(messageEmbed).queue();
 
 				// Update last spawn time
@@ -68,14 +102,14 @@ public class ChampionSpawningService {
 	}
 
 	// Create an embed for the spawned champion
-	private MessageEmbed createChampionEmbed(Champion champion) {
+	private MessageEmbed createChampionEmbed(ChampionDTO championDTO) {
 		EmbedBuilder embedBuilder = new EmbedBuilder();
 		embedBuilder.setTitle("A Wild Champion Has Appeared!");
 		embedBuilder.setColor(Color.CYAN);
 		embedBuilder.setDescription("Guess the champion and type `@RiftCatcher [Champion Name]` to catch it!");
-		embedBuilder.addField("Champion", champion.getName(), true);
-		embedBuilder.addField("Skin", champion.getCurrentSkin().getName(), true);
-		embedBuilder.addField("Rarity", champion.getCurrentSkin().getSkinRarity().getRarity().toString(), true);
+		embedBuilder.addField("Champion", championDTO.getName(), true);
+		embedBuilder.addField("Rarity", championDTO.getRarity(), true);
+		embedBuilder.addField("Current Skin", championDTO.getCurrentSkinName(), true);
 
 		return embedBuilder.build();
 	}
