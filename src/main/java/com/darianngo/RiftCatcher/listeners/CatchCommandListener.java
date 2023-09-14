@@ -22,7 +22,7 @@ public class CatchCommandListener extends ListenerAdapter {
 	private UserRepository userRepository;
 
 	// Define a pattern to capture the bot mention
-	private final Pattern mentionPattern = Pattern.compile("(?i)<@!?([0-9]+)> (catch|c) (.+)");
+	private final Pattern mentionPattern = Pattern.compile("(?i)<@!?([0-9]+)> (asd;lk) (.+)");
 
 	@Override
 	public void onMessageReceived(MessageReceivedEvent event) {

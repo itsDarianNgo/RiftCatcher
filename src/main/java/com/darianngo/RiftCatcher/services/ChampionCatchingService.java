@@ -79,7 +79,7 @@ public class ChampionCatchingService {
 		System.out.println("Latest Spawn Details: " + latestSpawn);
 
 		if (latestSpawn == null || latestSpawn.getCaughtByUserId() != null) {
-			event.getChannel().sendMessage(championName + " is not available to catch!").queue();
+			event.getChannel().sendMessage(champion.getName() + " is not available to catch!").queue();
 			return;
 		}
 
@@ -89,10 +89,14 @@ public class ChampionCatchingService {
 			latestSpawn.setCaughtByUserId(event.getAuthor().getId());
 			spawnEventRepository.save(latestSpawn);
 
-			event.getChannel().sendMessage("Congratulations! You caught " + championName + "!").queue();
+			event.getChannel().sendMessage("Congratulations! You caught " + champion.getName() + "!").queue(); // Updated
+																												// this
+																												// line
 		} else {
 			// The champion "flees" but is still available for others to attempt to catch
-			event.getChannel().sendMessage(championName + " escaped! Better luck next time.").queue();
+			event.getChannel().sendMessage(champion.getName() + " escaped! Better luck next time.").queue(); // Updated
+																												// this
+																												// line
 		}
 	}
 

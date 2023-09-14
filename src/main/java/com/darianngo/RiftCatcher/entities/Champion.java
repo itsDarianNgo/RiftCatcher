@@ -64,4 +64,9 @@ public class Champion {
 		return Objects.equals(id, champion.id) && Objects.equals(name, champion.name)
 				&& Objects.equals(rarity, champion.rarity);
 	}
+
+	@Override
+	public String toString() {
+		return "Champion [id=" + id + ", name=" + name + "]";
+	}
 }
