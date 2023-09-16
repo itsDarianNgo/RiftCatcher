@@ -1,5 +1,6 @@
 package com.darianngo.RiftCatcher.entities;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import jakarta.persistence.Entity;
@@ -34,6 +35,8 @@ public class CaughtChampion {
 	@ManyToMany
 	@JoinTable(name = "caught_champion_spells", joinColumns = @JoinColumn(name = "caught_champion_id"), inverseJoinColumns = @JoinColumn(name = "spell_id"))
 	private List<SummonerSpell> summonerSpells; // Should contain exactly 2 summoner spells
+
+	private LocalDateTime caughtAt;
 
 	private String skin;
 	private Integer level;

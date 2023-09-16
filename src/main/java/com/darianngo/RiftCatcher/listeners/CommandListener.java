@@ -20,9 +20,6 @@ public class CommandListener extends ListenerAdapter {
 	@Autowired
 	private UserService userService;
 
-	@Autowired
-	private UserRepository userRepository;
-
 	@Override
 	public void onMessageReceived(MessageReceivedEvent event) {
 
@@ -31,38 +28,29 @@ public class CommandListener extends ListenerAdapter {
 
 		String botMention = "<@" + event.getJDA().getSelfUser().getId() + ">";
 		if (event.getMessage().getContentRaw().contains(botMention)) {
-			String userId = event.getAuthor().getId();
-			User user = userRepository.findByDiscordId(userId);
+			String[] args = event.getMessage().getContentRaw().split("\\s+");
 
-			if (user == null) {
-				// Create a new user with default values
-				user = userService.createUser(event.getAuthor());
-			}
-
-			if (!user.getHasSignedUp()) {
-				event.getChannel().sendMessage(event.getAuthor().getAsMention()
-						+ " In the vast world of Runeterra, every summoner starts with a trusty champion by their side. Select yours with `@RiftCatcher Start` and begin your journey!")
-						.queue();
+			// If no command is provided
+			if (args.length <= 1) {
+				userService.handleUserState(event);
 				return;
 			}
 
-			if (event.getMessage().getContentRaw().contains(botMention)) {
-				String[] args = event.getMessage().getContentRaw().split("\\s+");
-				if (args.length > 1) {
-					String command = args[1].toLowerCase();
-					switch (command) {
-					case "start":
-						userService.handleStartCommand(event);
-						break;
-					case "catch":
-					case "c":
-						championCatchingService.handleCommand(event);
-						break;
-					default:
-						event.getChannel().sendMessage("Unknown command!").queue();
-						break;
-					}
-				}
+			String command = args[1].toLowerCase();
+			switch (command) {
+			case "start":
+				userService.handleStartCommand(event);
+				break;
+			case "select":
+				userService.handleChampionSelect(event, args);
+				break;
+			case "catch":
+			case "c":
+				championCatchingService.handleCommand(event);
+				break;
+			default:
+				event.getChannel().sendMessage("Unknown command!").queue();
+				break;
 			}
 		}
 	}
