@@ -4,12 +4,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.darianngo.RiftCatcher.services.ChampionCatchingService;
+import com.darianngo.RiftCatcher.services.ChampionSelectService;
 import com.darianngo.RiftCatcher.services.UserService;
 
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
 @Component
 public class CommandListener extends ListenerAdapter {
@@ -19,6 +18,9 @@ public class CommandListener extends ListenerAdapter {
 
 	@Autowired
 	private UserService userService;
+
+	@Autowired
+	private ChampionSelectService championSelectService;
 
 	@Override
 	public void onMessageReceived(MessageReceivedEvent event) {
@@ -42,7 +44,7 @@ public class CommandListener extends ListenerAdapter {
 				userService.handleStartCommand(event);
 				break;
 			case "select":
-				userService.handleChampionSelect(event, args);
+				championSelectService.handleChampionSelect(event, args);
 				break;
 			case "catch":
 			case "c":

@@ -1,5 +1,6 @@
 package com.darianngo.RiftCatcher.services;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.darianngo.RiftCatcher.entities.Champion;
 import com.darianngo.RiftCatcher.entities.SpawnEvent;
+import com.darianngo.RiftCatcher.entities.User;
 import com.darianngo.RiftCatcher.repositories.ChampionRepository;
 import com.darianngo.RiftCatcher.repositories.SpawnEventRepository;
 import com.darianngo.RiftCatcher.repositories.UserRepository;
@@ -43,6 +45,7 @@ public class ChampionCatchingService {
 
 		// Check if the user exists and has signed up
 		if (!userService.isUserExistAndSignedUp(userId)) {
+			createUser(event.getAuthor());
 			userService.promptUserToSignUp(event);
 			return;
 		}
@@ -59,18 +62,8 @@ public class ChampionCatchingService {
 			return;
 		}
 
-//		String command = args[1];
 		String championName = args[2];
-//
-//		switch (command.toLowerCase()) {
-//		case "catch":
-//		case "c":
 		catchChampion(championName, event);
-//			break;
-//		default:
-//			event.getChannel().sendMessage("Unknown command!").queue();
-//			break;
-//		}
 
 		lastCatchAttemptByUser.put(userId, currentTime);
 	}
@@ -105,4 +98,11 @@ public class ChampionCatchingService {
 		}
 	}
 
+	public User createUser(net.dv8tion.jda.api.entities.User discordUser) {
+		User newUser = new User();
+		newUser.setDiscordId(discordUser.getId());
+		newUser.setDiscordName(discordUser.getName());
+		newUser.setFirstInteractionTime(LocalDateTime.now());
+		return userRepository.save(newUser);
+	}
 }

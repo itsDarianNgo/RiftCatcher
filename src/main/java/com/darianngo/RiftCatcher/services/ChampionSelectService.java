@@ -1,6 +1,7 @@
 package com.darianngo.RiftCatcher.services;
 
 import java.awt.Color;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,7 +9,9 @@ import org.springframework.stereotype.Service;
 
 import com.darianngo.RiftCatcher.config.RedisManager;
 import com.darianngo.RiftCatcher.entities.StarterChampion;
+import com.darianngo.RiftCatcher.entities.User;
 import com.darianngo.RiftCatcher.repositories.StarterChampionRepository;
+import com.darianngo.RiftCatcher.repositories.UserRepository;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
@@ -23,9 +26,74 @@ public class ChampionSelectService {
 	private StarterChampionRepository starterChampionRepository;
 
 	@Autowired
+	private CollectionService collectionService;
+
+	@Autowired
+	private UserRepository userRepository;
+
+	@Autowired
 	private RedisManager redisManager;
 
 	private static final int CHAMPIONS_PER_PAGE = 1;
+
+	public void handleChampionSelect(MessageReceivedEvent event, String[] args) {
+		String userId = event.getAuthor().getId();
+		User user = userRepository.findByDiscordId(userId);
+
+		// If user doesn't exist, create them
+		if (user == null) {
+			user = createUser(event.getAuthor());
+		}
+		// Check if the user has already signed up
+		if (isUserExistAndSignedUp(userId)) {
+			event.getChannel()
+					.sendMessage(event.getAuthor().getAsMention() + " You have already selected your starter champion!")
+					.queue();
+			return;
+		}
+
+		if (args.length < 3) {
+			sendInvalidChampionSelectionMessage(event);
+			return;
+		}
+
+		String chosenChampionName = args[2];
+
+		// Validate the champion choice by checking the database
+		StarterChampion chosenChampion = starterChampionRepository.findByNameIgnoreCase(chosenChampionName);
+
+		if (chosenChampion == null) {
+			sendInvalidChampionSelectionMessage(event);
+			return;
+		}
+
+		// Use the exact name from the database for the response
+		String actualChampionName = chosenChampion.getName();
+
+		// Add the champion to the user's collection
+		collectionService.addChampionToUser(event.getAuthor().getId(), actualChampionName);
+
+		// Mark the user as signed up
+		if (user != null) {
+			userRepository.save(user);
+		}
+
+		// Mark the user as signed up, update gold, last catch time, starter champion,
+		// and increment champions caught
+		user.setHasSignedUp(true);
+		user.setGold(500);
+		user.setLastCatchTime(LocalDateTime.now());
+		user.setStarterChampion(actualChampionName);
+		user.setChampionsCaught(1);
+
+		userRepository.save(user);
+
+		// Add the champion to the user's collection
+		collectionService.addChampionToUser(event.getAuthor().getId(), actualChampionName);
+
+		event.getChannel().sendMessage(event.getAuthor().getAsMention() + " Congratulations! You have selected "
+				+ actualChampionName + " as your starter champion!").queue();
+	}
 
 	public void sendChampionEmbed(MessageReceivedEvent event, int pageIndex) {
 		EmbedBuilder embed = generateChampionEmbed(pageIndex);
@@ -77,6 +145,25 @@ public class ChampionSelectService {
 		return (pageIndex + 1 == totalPages)
 				? Button.primary("next_page:" + pageIndex + ":" + originalMsgId, "Next").asDisabled()
 				: Button.primary("next_page:" + pageIndex + ":" + originalMsgId, "Next");
+	}
+
+	private void sendInvalidChampionSelectionMessage(MessageReceivedEvent event) {
+		event.getChannel().sendMessage(
+				event.getAuthor().getAsMention() + " Invalid champion choice. Please select a valid starter champion.")
+				.queue();
+	}
+
+	private boolean isUserExistAndSignedUp(String userId) {
+		User user = userRepository.findByDiscordId(userId);
+		return user != null && user.getHasSignedUp();
+	}
+
+	public User createUser(net.dv8tion.jda.api.entities.User discordUser) {
+		User newUser = new User();
+		newUser.setDiscordId(discordUser.getId());
+		newUser.setDiscordName(discordUser.getName());
+		newUser.setFirstInteractionTime(LocalDateTime.now());
+		return userRepository.save(newUser);
 	}
 
 }

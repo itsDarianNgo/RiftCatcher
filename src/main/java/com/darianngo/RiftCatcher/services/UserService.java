@@ -64,67 +64,6 @@ public class UserService {
 		championSelectService.sendChampionEmbed(event, 0);
 	}
 
-	public void handleChampionSelect(MessageReceivedEvent event, String[] args) {
-		String userId = event.getAuthor().getId();
-
-		// Check if the user has already signed up
-		if (isUserExistAndSignedUp(userId)) {
-			event.getChannel()
-					.sendMessage(event.getAuthor().getAsMention() + " You have already selected your starter champion!")
-					.queue();
-			return;
-		}
-		
-		if (args.length < 3) {
-			sendInvalidChampionSelectionMessage(event);
-			return;
-		}
-
-		String chosenChampionName = args[2];
-
-		// Validate the champion choice by checking the database
-		StarterChampion chosenChampion = starterChampionRepository.findByNameIgnoreCase(chosenChampionName);
-
-		if (chosenChampion == null) {
-			sendInvalidChampionSelectionMessage(event);
-			return;
-		}
-
-		// Use the exact name from the database for the response
-		String actualChampionName = chosenChampion.getName();
-
-		// Add the champion to the user's collection
-		collectionService.addChampionToUser(event.getAuthor().getId(), actualChampionName);
-
-		// Mark the user as signed up
-		User user = userRepository.findByDiscordId(event.getAuthor().getId());
-		if (user != null) {
-			userRepository.save(user);
-		}
-
-		// Mark the user as signed up, update gold, last catch time, starter champion,
-		// and increment champions caught
-		user.setHasSignedUp(true);
-		user.setGold(500);
-		user.setLastCatchTime(LocalDateTime.now());
-		user.setStarterChampion(actualChampionName);
-		user.setChampionsCaught(1);
-
-		userRepository.save(user);
-
-		// Add the champion to the user's collection
-		collectionService.addChampionToUser(event.getAuthor().getId(), actualChampionName);
-
-		event.getChannel().sendMessage(event.getAuthor().getAsMention() + " Congratulations! You have selected "
-				+ actualChampionName + " as your starter champion!").queue();
-	}
-
-	private void sendInvalidChampionSelectionMessage(MessageReceivedEvent event) {
-		event.getChannel().sendMessage(
-				event.getAuthor().getAsMention() + " Invalid champion choice. Please select a valid starter champion.")
-				.queue();
-	}
-
 	public User createUser(net.dv8tion.jda.api.entities.User discordUser) {
 		User newUser = new User();
 		newUser.setDiscordId(discordUser.getId());
