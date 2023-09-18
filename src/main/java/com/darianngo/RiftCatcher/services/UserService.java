@@ -1,19 +1,16 @@
 package com.darianngo.RiftCatcher.services;
 
-import java.awt.Color;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.darianngo.RiftCatcher.config.RedisManager;
 import com.darianngo.RiftCatcher.entities.StarterChampion;
 import com.darianngo.RiftCatcher.entities.User;
 import com.darianngo.RiftCatcher.repositories.StarterChampionRepository;
 import com.darianngo.RiftCatcher.repositories.UserRepository;
 
-import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 @Service
@@ -29,9 +26,10 @@ public class UserService {
 	private StarterChampionRepository starterChampionRepository;
 
 	@Autowired
-	private RedisStateManagementService redisStateManagementService;
+	private ChampionSelectService championSelectService;
 
-	private final int CHAMPIONS_PER_PAGE = 3; // or whatever number you want
+	@Autowired
+	private RedisManager redisManager;
 
 	public void handleStartCommand(MessageReceivedEvent event) {
 		String userId = event.getAuthor().getId();
@@ -57,31 +55,13 @@ public class UserService {
 			return;
 		}
 
-		List<StarterChampion> champions = starterChampionRepository.findAll();
-		MessageEmbed embed = generateStarterChampionEmbed(champions, 0);
-		redisStateManagementService.setUserPage(userId, 0); // Initialize user's page to 0
+		// Save the user's ID in Redis using the message ID of the original command as a
+		// key
+		String key = event.getMessageId() + ":startCommandUser";
+		redisManager.setExpiringKey(key, event.getAuthor().getId(), 300); // Expires in 5 minutes
 
-		event.getChannel().sendMessageEmbeds(embed).setActionRows(getActionRow(userId)).queue();
-	}
-
-	}
-
-	public MessageEmbed generateStarterChampionEmbed(List<StarterChampion> champions, int page) {
-		EmbedBuilder embed = new EmbedBuilder().setTitle("Welcome to the world of Runeterra!").setColor(Color.CYAN)
-				.setDescription(
-						"To embark on your journey, select a starter champion using the `@RiftCatcher select <champion>` command.")
-				.setFooter("Choose wisely, summoner!");
-
-		int startIndex = page * 5; // 5 champions per page for example
-		int endIndex = Math.min(startIndex + 5, champions.size());
-		for (int i = startIndex; i < endIndex; i++) {
-			StarterChampion champ = champions.get(i);
-			String championContent = "**Lore:** *" + champ.getLore() + "*" + "\n\n**Bonus:** " + champ.getBonusName()
-					+ " - " + champ.getBonusDescription();
-			embed.addField(champ.getRegion() + " - **" + champ.getName() + "**", championContent, false);
-		}
-
-		return embed.build();
+		// Send paginated champion embeds to select from
+		championSelectService.sendChampionEmbed(event, 0);
 	}
 
 	public void handleChampionSelect(MessageReceivedEvent event, String[] args) {

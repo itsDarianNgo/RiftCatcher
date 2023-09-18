@@ -12,7 +12,7 @@ import lombok.Data;
 @Entity
 @Data
 @Table(name = "starter_champions")
-//@AllArgsConstructor
+//@AllArgsConstructor // Uncomment for adding Starter Champions to database
 public class StarterChampion {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

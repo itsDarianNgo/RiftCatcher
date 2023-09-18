@@ -3,13 +3,13 @@ package com.darianngo.RiftCatcher.listeners;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.darianngo.RiftCatcher.entities.User;
-import com.darianngo.RiftCatcher.repositories.UserRepository;
 import com.darianngo.RiftCatcher.services.ChampionCatchingService;
 import com.darianngo.RiftCatcher.services.UserService;
 
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
 @Component
 public class CommandListener extends ListenerAdapter {
