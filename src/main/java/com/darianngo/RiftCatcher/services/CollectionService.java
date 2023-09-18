@@ -13,6 +13,8 @@ import com.darianngo.RiftCatcher.repositories.CaughtChampionRepository;
 import com.darianngo.RiftCatcher.repositories.ChampionRepository;
 import com.darianngo.RiftCatcher.repositories.UserRepository;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class CollectionService {
 
@@ -25,6 +27,7 @@ public class CollectionService {
 	@Autowired
 	private CaughtChampionRepository caughtChampionRepository;
 
+	@Transactional
 	public void addChampionToUser(String discordUserId, String championName) {
 		// Fetch the user and champion from the database
 		User user = userRepository.findByDiscordId(discordUserId);

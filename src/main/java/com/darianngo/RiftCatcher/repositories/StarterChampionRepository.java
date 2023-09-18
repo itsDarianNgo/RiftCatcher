@@ -9,4 +9,6 @@ import com.darianngo.RiftCatcher.entities.StarterChampion;
 public interface StarterChampionRepository extends JpaRepository<StarterChampion, Long> {
 
 	StarterChampion findByName(String chosenChampionName);
+
+	StarterChampion findByNameIgnoreCase(String name);
 }

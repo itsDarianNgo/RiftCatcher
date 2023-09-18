@@ -65,6 +65,16 @@ public class UserService {
 	}
 
 	public void handleChampionSelect(MessageReceivedEvent event, String[] args) {
+		String userId = event.getAuthor().getId();
+
+		// Check if the user has already signed up
+		if (isUserExistAndSignedUp(userId)) {
+			event.getChannel()
+					.sendMessage(event.getAuthor().getAsMention() + " You have already selected your starter champion!")
+					.queue();
+			return;
+		}
+		
 		if (args.length < 3) {
 			sendInvalidChampionSelectionMessage(event);
 			return;
@@ -73,30 +83,45 @@ public class UserService {
 		String chosenChampionName = args[2];
 
 		// Validate the champion choice by checking the database
-		StarterChampion chosenChampion = starterChampionRepository.findByName(chosenChampionName);
+		StarterChampion chosenChampion = starterChampionRepository.findByNameIgnoreCase(chosenChampionName);
 
 		if (chosenChampion == null) {
 			sendInvalidChampionSelectionMessage(event);
 			return;
 		}
 
+		// Use the exact name from the database for the response
+		String actualChampionName = chosenChampion.getName();
+
 		// Add the champion to the user's collection
-		collectionService.addChampionToUser(event.getAuthor().getId(), chosenChampion.getName());
+		collectionService.addChampionToUser(event.getAuthor().getId(), actualChampionName);
 
 		// Mark the user as signed up
 		User user = userRepository.findByDiscordId(event.getAuthor().getId());
 		if (user != null) {
-			user.setHasSignedUp(true);
 			userRepository.save(user);
 		}
 
+		// Mark the user as signed up, update gold, last catch time, starter champion,
+		// and increment champions caught
+		user.setHasSignedUp(true);
+		user.setGold(500);
+		user.setLastCatchTime(LocalDateTime.now());
+		user.setStarterChampion(actualChampionName);
+		user.setChampionsCaught(1);
+
+		userRepository.save(user);
+
+		// Add the champion to the user's collection
+		collectionService.addChampionToUser(event.getAuthor().getId(), actualChampionName);
+
 		event.getChannel().sendMessage(event.getAuthor().getAsMention() + " Congratulations! You have selected "
-				+ chosenChampionName + " as your starter champion!").queue();
+				+ actualChampionName + " as your starter champion!").queue();
 	}
 
 	private void sendInvalidChampionSelectionMessage(MessageReceivedEvent event) {
 		event.getChannel().sendMessage(
-				event.getAuthor().getAsMention() + " Invalid champion choice. Please choose a valid starter champion.")
+				event.getAuthor().getAsMention() + " Invalid champion choice. Please select a valid starter champion.")
 				.queue();
 	}
 
@@ -119,10 +144,18 @@ public class UserService {
 
 		// If user hasn't signed up yet
 		if (!user.getHasSignedUp()) {
-			event.getChannel().sendMessage(event.getAuthor().getAsMention()
-					+ " In the vast world of Runeterra, every summoner starts with a trusty champion by their side. Select yours with `@RiftCatcher Start` and begin your journey!")
-					.queue();
+			promptUserToSignUp(event);
 		}
 	}
 
+	public boolean isUserExistAndSignedUp(String userId) {
+		User user = userRepository.findByDiscordId(userId);
+		return user != null && user.getHasSignedUp();
+	}
+
+	public void promptUserToSignUp(MessageReceivedEvent event) {
+		event.getChannel().sendMessage(event.getAuthor().getAsMention()
+				+ " In the vast world of Runeterra, every summoner starts with a trusty champion by their side. Select yours with `@RiftCatcher Start` and begin your journey!")
+				.queue();
+	}
 }

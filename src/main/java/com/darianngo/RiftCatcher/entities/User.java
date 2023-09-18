@@ -8,6 +8,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
@@ -43,4 +45,7 @@ public class User {
 
 	@Column(name = "has_signed_up")
 	private Boolean hasSignedUp = false; // Flag to track if the user has completed the signup process
+
+	private String starterChampion;
+
 }

@@ -31,12 +31,21 @@ public class ChampionCatchingService {
 	@Autowired
 	private final SpawnEventRepository spawnEventRepository;
 
+	@Autowired
+	UserService userService;
+
 	// Cooldown management
 	private final Map<String, Long> lastCatchAttemptByUser = new ConcurrentHashMap<>();
 
 	public void handleCommand(MessageReceivedEvent event) {
 		String userId = event.getAuthor().getId();
 		long currentTime = System.currentTimeMillis();
+
+		// Check if the user exists and has signed up
+		if (!userService.isUserExistAndSignedUp(userId)) {
+			userService.promptUserToSignUp(event);
+			return;
+		}
 
 		// Check for cooldown
 		if (lastCatchAttemptByUser.containsKey(userId) && currentTime - lastCatchAttemptByUser.get(userId) < 5000) {
@@ -50,18 +59,18 @@ public class ChampionCatchingService {
 			return;
 		}
 
-		String command = args[1];
+//		String command = args[1];
 		String championName = args[2];
-
-		switch (command.toLowerCase()) {
-		case "catch":
-		case "c":
-			catchChampion(championName, event);
-			break;
-		default:
-			event.getChannel().sendMessage("Unknown command!").queue();
-			break;
-		}
+//
+//		switch (command.toLowerCase()) {
+//		case "catch":
+//		case "c":
+		catchChampion(championName, event);
+//			break;
+//		default:
+//			event.getChannel().sendMessage("Unknown command!").queue();
+//			break;
+//		}
 
 		lastCatchAttemptByUser.put(userId, currentTime);
 	}
