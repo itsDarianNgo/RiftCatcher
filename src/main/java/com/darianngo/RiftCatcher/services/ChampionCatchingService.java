@@ -7,10 +7,15 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.darianngo.RiftCatcher.entities.CaughtChampion;
 import com.darianngo.RiftCatcher.entities.Champion;
+import com.darianngo.RiftCatcher.entities.ChampionSkin;
 import com.darianngo.RiftCatcher.entities.SpawnEvent;
+import com.darianngo.RiftCatcher.entities.SpawnedChampion;
 import com.darianngo.RiftCatcher.entities.User;
+import com.darianngo.RiftCatcher.repositories.CaughtChampionRepository;
 import com.darianngo.RiftCatcher.repositories.ChampionRepository;
 import com.darianngo.RiftCatcher.repositories.SpawnEventRepository;
 import com.darianngo.RiftCatcher.repositories.UserRepository;
@@ -34,6 +39,9 @@ public class ChampionCatchingService {
 	private final SpawnEventRepository spawnEventRepository;
 
 	@Autowired
+	private final CaughtChampionRepository caughtChampionRepository;
+
+	@Autowired
 	UserService userService;
 
 	// Cooldown management
@@ -45,29 +53,38 @@ public class ChampionCatchingService {
 
 		// Check if the user exists and has signed up
 		if (!userService.isUserExistAndSignedUp(userId)) {
-			createUser(event.getAuthor());
+			userService.createUser(event.getAuthor());
 			userService.promptUserToSignUp(event);
 			return;
 		}
 
 		// Check for cooldown
-		if (lastCatchAttemptByUser.containsKey(userId) && currentTime - lastCatchAttemptByUser.get(userId) < 5000) {
+		if (isUserOnCooldown(userId, currentTime)) {
 			event.getChannel().sendMessage("Please wait a few seconds before trying to catch again!").queue();
 			return;
 		}
 
-		String[] args = event.getMessage().getContentRaw().split("\\s+");
-		if (args.length < 3) {
+		String championName = extractChampionNameFromCommand(event.getMessage().getContentRaw());
+		if (championName == null) {
 			event.getChannel().sendMessage("Invalid command format! Use `@RiftCatcher catch <champion-name>`").queue();
 			return;
 		}
 
-		String championName = args[2];
 		catchChampion(championName, event);
 
 		lastCatchAttemptByUser.put(userId, currentTime);
 	}
 
+	private String extractChampionNameFromCommand(String command) {
+		String[] args = command.split("\\s+");
+		return args.length >= 3 ? args[2] : null;
+	}
+
+	private boolean isUserOnCooldown(String userId, long currentTime) {
+		return lastCatchAttemptByUser.containsKey(userId) && currentTime - lastCatchAttemptByUser.get(userId) < 5000;
+	}
+
+	@Transactional
 	private synchronized void catchChampion(String championName, MessageReceivedEvent event) {
 		Champion champion = championRepository.findByNameIgnoreCase(championName);
 
@@ -78,9 +95,8 @@ public class ChampionCatchingService {
 
 		// Fetch the latest spawn event for the champion
 		SpawnEvent latestSpawn = spawnEventRepository.findLatestSpawnForChampion(champion.getId());
-		System.out.println("Latest Spawn Details: " + latestSpawn);
 
-		if (latestSpawn == null || latestSpawn.getCaughtByUserId() != null) {
+		if (isChampionNotAvailableToCatch(latestSpawn)) {
 			event.getChannel().sendMessage(champion.getName() + " is not available to catch!").queue();
 			return;
 		}
@@ -88,21 +104,52 @@ public class ChampionCatchingService {
 		boolean success = random.nextBoolean();
 
 		if (success) {
-			latestSpawn.setCaughtByUserId(event.getAuthor().getId());
-			spawnEventRepository.save(latestSpawn);
+			markChampionAsCaught(latestSpawn, event.getAuthor().getId());
+			incrementUserChampionCaughtCount(event.getAuthor().getId());
 
-			event.getChannel().sendMessage("Congratulations! You caught " + champion.getName() + "!").queue();
+			// Fetch the current skin of the spawned champion
+			SpawnedChampion spawnedChampion = latestSpawn.getSpawnedChampion();
+			ChampionSkin skin = spawnedChampion.getCurrentSkin();
+
+			createCaughtChampion(event.getAuthor().getId(), champion, skin); // Pass the skin as an argument
+
+			String successMessage = String.format(
+					"**Victory!** You've bound a level %d %s to your will. The stars of Targon shine in your favor!",
+					champion.getLevel(), champion.getName());
+			event.getChannel().sendMessage(event.getAuthor().getAsMention() + " " + successMessage).queue();
 		} else {
-			// The champion "flees" but is still available for others to attempt to catch
-			event.getChannel().sendMessage(champion.getName() + " escaped! Better luck next time.").queue();
+			// Mentioning the user and sending the defeat message
+			event.getChannel()
+					.sendMessage(event.getAuthor().getAsMention()
+							+ " **Defeat!** The ancient runes of Runeterra intervened, and " + champion.getName()
+							+ " remains free.")
+					.queue();
 		}
 	}
 
-	public User createUser(net.dv8tion.jda.api.entities.User discordUser) {
-		User newUser = new User();
-		newUser.setDiscordId(discordUser.getId());
-		newUser.setDiscordName(discordUser.getName());
-		newUser.setFirstInteractionTime(LocalDateTime.now());
-		return userRepository.save(newUser);
+	private boolean isChampionNotAvailableToCatch(SpawnEvent latestSpawn) {
+		return latestSpawn == null || latestSpawn.getCaughtByUserId() != null;
+	}
+
+	private void markChampionAsCaught(SpawnEvent latestSpawn, String userId) {
+		latestSpawn.setCaughtByUserId(userId);
+		spawnEventRepository.save(latestSpawn);
+	}
+
+	private void incrementUserChampionCaughtCount(String userId) {
+		User user = userRepository.findByDiscordId(userId);
+		// Assuming you have a championCaught field in the User entity
+		user.setChampionsCaught(user.getChampionsCaught() + 1);
+		userRepository.save(user);
+	}
+
+	private void createCaughtChampion(String userId, Champion champion, ChampionSkin skin) {
+		CaughtChampion caughtChampion = new CaughtChampion();
+		caughtChampion.setUser(userRepository.findByDiscordId(userId));
+		caughtChampion.setChampion(champion);
+		caughtChampion.setSkin(skin);
+		caughtChampion.setCaughtAt(LocalDateTime.now());
+
+		caughtChampionRepository.save(caughtChampion);
 	}
 }
