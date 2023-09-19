@@ -71,7 +71,7 @@ public class ChampionSelectService {
 		String actualChampionName = chosenChampion.getName();
 
 		// Add the champion to the user's collection
-		collectionService.addChampionToUser(event.getAuthor().getId(), actualChampionName);
+		collectionService.addStarterChampionToUser(event.getAuthor().getId(), actualChampionName);
 
 		// Mark the user as signed up
 		if (user != null) {
@@ -87,9 +87,6 @@ public class ChampionSelectService {
 		user.setChampionsCaught(1);
 
 		userRepository.save(user);
-
-		// Add the champion to the user's collection
-		collectionService.addChampionToUser(event.getAuthor().getId(), actualChampionName);
 
 		event.getChannel().sendMessage(event.getAuthor().getAsMention() + " Congratulations! You have selected "
 				+ actualChampionName + " as your starter champion!").queue();

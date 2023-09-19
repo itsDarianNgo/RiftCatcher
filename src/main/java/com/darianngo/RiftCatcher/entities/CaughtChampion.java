@@ -38,8 +38,13 @@ public class CaughtChampion {
 
 	private LocalDateTime caughtAt;
 
-	private String skin;
+	private boolean isStarter = false;
+
+	@ManyToOne
+	@JoinColumn(name = "skin_id")
+	private ChampionSkin skin;
 	private Integer level;
 	private Integer health;
 	private Integer mana;
+
 }
