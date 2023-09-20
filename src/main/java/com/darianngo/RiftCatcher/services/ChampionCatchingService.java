@@ -1,8 +1,12 @@
 package com.darianngo.RiftCatcher.services;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,12 +16,16 @@ import org.springframework.transaction.annotation.Transactional;
 import com.darianngo.RiftCatcher.entities.CaughtChampion;
 import com.darianngo.RiftCatcher.entities.Champion;
 import com.darianngo.RiftCatcher.entities.ChampionSkin;
+import com.darianngo.RiftCatcher.entities.Rune;
 import com.darianngo.RiftCatcher.entities.SpawnEvent;
 import com.darianngo.RiftCatcher.entities.SpawnedChampion;
+import com.darianngo.RiftCatcher.entities.SummonerSpell;
 import com.darianngo.RiftCatcher.entities.User;
 import com.darianngo.RiftCatcher.repositories.CaughtChampionRepository;
 import com.darianngo.RiftCatcher.repositories.ChampionRepository;
+import com.darianngo.RiftCatcher.repositories.RuneRepository;
 import com.darianngo.RiftCatcher.repositories.SpawnEventRepository;
+import com.darianngo.RiftCatcher.repositories.SummonerSpellRepository;
 import com.darianngo.RiftCatcher.repositories.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -40,6 +48,12 @@ public class ChampionCatchingService {
 
 	@Autowired
 	private final CaughtChampionRepository caughtChampionRepository;
+
+	@Autowired
+	private final SummonerSpellRepository summonerSpellRepository;
+
+	@Autowired
+	private final RuneRepository runeRepository;
 
 	@Autowired
 	UserService userService;
@@ -121,7 +135,7 @@ public class ChampionCatchingService {
 			// Mentioning the user and sending the defeat message
 			event.getChannel()
 					.sendMessage(event.getAuthor().getAsMention()
-							+ " **Defeat!** The ancient runes of Runeterra intervened, and " + champion.getName()
+							+ " **Defeat!** The ancient runes of Runeterra intervened and " + champion.getName()
 							+ " remains free.")
 					.queue();
 		}
@@ -145,11 +159,30 @@ public class ChampionCatchingService {
 
 	private void createCaughtChampion(String userId, Champion champion, ChampionSkin skin) {
 		CaughtChampion caughtChampion = new CaughtChampion();
+		Set<SummonerSpell> uniqueSummonerSpells = assignTwoUniqueSummonerSpells();
+		Set<Rune> uniqueRunes = assignTwoUniqueRunes();
 		caughtChampion.setUser(userRepository.findByDiscordId(userId));
 		caughtChampion.setChampion(champion);
 		caughtChampion.setSkin(skin);
+		caughtChampion.setSummonerSpells(uniqueSummonerSpells);
+		caughtChampion.setRunes(uniqueRunes);
 		caughtChampion.setCaughtAt(LocalDateTime.now());
-
+		
 		caughtChampionRepository.save(caughtChampion);
+	}
+
+	private Set<Rune> assignTwoUniqueRunes() {
+		List<Rune> allRunes = runeRepository.findAll();
+		Collections.shuffle(allRunes);
+		Set<Rune> uniqueRunes = new HashSet<>(allRunes.subList(0, 2)); // Assign the first two from the shuffled list
+		return uniqueRunes;
+	}
+	
+	private Set<SummonerSpell> assignTwoUniqueSummonerSpells() {
+		List<SummonerSpell> allSpells = summonerSpellRepository.findAll();
+		Collections.shuffle(allSpells);
+		Set<SummonerSpell> uniqueSummonerSpells = new HashSet<>(allSpells.subList(0, 2));
+		return uniqueSummonerSpells;
+	}
 	}
 }

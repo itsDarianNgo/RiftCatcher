@@ -4,15 +4,25 @@ import java.awt.Color;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.darianngo.RiftCatcher.config.RedisManager;
+import com.darianngo.RiftCatcher.entities.CaughtChampion;
+import com.darianngo.RiftCatcher.entities.Champion;
+import com.darianngo.RiftCatcher.entities.ChampionSkin;
+import com.darianngo.RiftCatcher.entities.ChampionSkinRarity;
 import com.darianngo.RiftCatcher.entities.StarterChampion;
 import com.darianngo.RiftCatcher.entities.User;
+import com.darianngo.RiftCatcher.repositories.CaughtChampionRepository;
+import com.darianngo.RiftCatcher.repositories.ChampionRepository;
 import com.darianngo.RiftCatcher.repositories.StarterChampionRepository;
 import com.darianngo.RiftCatcher.repositories.UserRepository;
 
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -22,6 +32,8 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 @Service
 public class ChampionSelectService {
 
+	private static final Logger logger = LoggerFactory.getLogger(ChampionSelectService.class);
+	
 	@Autowired
 	private StarterChampionRepository starterChampionRepository;
 
@@ -33,6 +45,15 @@ public class ChampionSelectService {
 
 	@Autowired
 	private RedisManager redisManager;
+
+	@Autowired
+	ChampionRepository championRepository;
+
+	@Autowired
+	ChampionAndSkinRarityService championAndSkinRarityService;
+
+	@Autowired
+	CaughtChampionRepository caughtChampionRepository;
 
 	private static final int CHAMPIONS_PER_PAGE = 1;
 
@@ -71,7 +92,7 @@ public class ChampionSelectService {
 		String actualChampionName = chosenChampion.getName();
 
 		// Add the champion to the user's collection
-		collectionService.addStarterChampionToUser(event.getAuthor().getId(), actualChampionName);
+		addStarterChampionToUser(event.getAuthor().getId(), actualChampionName);
 
 		// Mark the user as signed up
 		if (user != null) {
@@ -161,6 +182,46 @@ public class ChampionSelectService {
 		newUser.setDiscordName(discordUser.getName());
 		newUser.setFirstInteractionTime(LocalDateTime.now());
 		return userRepository.save(newUser);
+	}
+
+	@Transactional
+	public void addStarterChampionToUser(String discordUserId, String championName) {
+		User user = userRepository.findByDiscordId(discordUserId);
+		Champion champion = championRepository.findByNameIgnoreCase(championName);
+
+		// Handle errors
+		handlePotentialErrors(user, champion, discordUserId, championName);
+
+		// Determine the starter champion's skin rarity
+		ChampionSkinRarity skinRarity = championAndSkinRarityService.determineSkinRarity(champion);
+		// Fetch a random skin of the chosen rarity for the designated champion
+		ChampionSkin starterChampionSkin = championAndSkinRarityService.getRandomSkinByRarity(champion, skinRarity);
+
+		// Add additional logic here to generate stats, etc. for the starter champion
+
+		// Create a new CaughtChampion and save
+		CaughtChampion newCaughtChampion = new CaughtChampion();
+		newCaughtChampion.setUser(user);
+		newCaughtChampion.setChampion(champion);
+		newCaughtChampion.setCaughtAt(LocalDateTime.now());
+		newCaughtChampion.setSkin(starterChampionSkin);
+		newCaughtChampion.setStarter(true); // Mark this as a starter champion
+
+		caughtChampionRepository.save(newCaughtChampion);
+	}
+
+	private void handlePotentialErrors(User user, Champion champion, String discordUserId, String championName)
+			throws EntityNotFoundException {
+		if (user == null && champion == null) {
+			logger.error("User with ID {} and Champion with name {} not found.", discordUserId, championName);
+			throw new EntityNotFoundException("User and Champion not found.");
+		} else if (user == null) {
+			logger.error("User with ID {} not found.", discordUserId);
+			throw new EntityNotFoundException("User not found.");
+		} else if (champion == null) {
+			logger.error("Champion with name {} not found.", championName);
+			throw new EntityNotFoundException("Champion not found.");
+		}
 	}
 
 }

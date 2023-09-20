@@ -1,9 +1,11 @@
 package com.darianngo.RiftCatcher.entities;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Set;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -28,13 +30,13 @@ public class CaughtChampion {
 	@ManyToOne
 	private Champion champion;
 
-	@ManyToMany
+	@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
 	@JoinTable(name = "caught_champion_runes", joinColumns = @JoinColumn(name = "caught_champion_id"), inverseJoinColumns = @JoinColumn(name = "rune_id"))
-	private List<Rune> runes; // Should contain exactly 2 runes
+	private Set<Rune> runes; // Should contain exactly 2 runes
 
-	@ManyToMany
-	@JoinTable(name = "caught_champion_spells", joinColumns = @JoinColumn(name = "caught_champion_id"), inverseJoinColumns = @JoinColumn(name = "spell_id"))
-	private List<SummonerSpell> summonerSpells; // Should contain exactly 2 summoner spells
+	@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+	@JoinTable(name = "caught_champion_spells", joinColumns = @JoinColumn(name = "caught_champion_id"), inverseJoinColumns = @JoinColumn(name = "summoner_spell_id"))
+	private Set<SummonerSpell> summonerSpells;
 
 	private LocalDateTime caughtAt;
 

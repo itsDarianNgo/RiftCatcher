@@ -265,6 +265,7 @@ public class ChampionAndSkinRarityService extends ListenerAdapter {
 	}
 
 	// Fetch a random skin of the chosen rarity for the designated champion
+	@Transactional
 	public ChampionSkin getRandomSkinByRarity(Champion champion, ChampionSkinRarity rarity) {
 		logger.info("Determining random skin by rarity for champion: {} and rarity: {}", champion.getName(),
 				rarity.getRarity());
