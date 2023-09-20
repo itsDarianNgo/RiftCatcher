@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.darianngo.RiftCatcher.entities.CaughtChampion;
 import com.darianngo.RiftCatcher.entities.Champion;
 import com.darianngo.RiftCatcher.entities.ChampionSkin;
+import com.darianngo.RiftCatcher.entities.Nature;
 import com.darianngo.RiftCatcher.entities.Rune;
 import com.darianngo.RiftCatcher.entities.SpawnEvent;
 import com.darianngo.RiftCatcher.entities.SpawnedChampion;
@@ -23,6 +24,7 @@ import com.darianngo.RiftCatcher.entities.SummonerSpell;
 import com.darianngo.RiftCatcher.entities.User;
 import com.darianngo.RiftCatcher.repositories.CaughtChampionRepository;
 import com.darianngo.RiftCatcher.repositories.ChampionRepository;
+import com.darianngo.RiftCatcher.repositories.NatureRepository;
 import com.darianngo.RiftCatcher.repositories.RuneRepository;
 import com.darianngo.RiftCatcher.repositories.SpawnEventRepository;
 import com.darianngo.RiftCatcher.repositories.SummonerSpellRepository;
@@ -54,6 +56,9 @@ public class ChampionCatchingService {
 
 	@Autowired
 	private final RuneRepository runeRepository;
+
+	@Autowired
+	private final NatureRepository natureRepository;
 
 	@Autowired
 	UserService userService;
@@ -125,7 +130,11 @@ public class ChampionCatchingService {
 			SpawnedChampion spawnedChampion = latestSpawn.getSpawnedChampion();
 			ChampionSkin skin = spawnedChampion.getCurrentSkin();
 
-			createCaughtChampion(event.getAuthor().getId(), champion, skin); // Pass the skin as an argument
+			// Fetch a random nature when a champion is caught
+			Nature randomNature = getRandomNature();
+
+			// Create the caught champion record
+			createCaughtChampion(event.getAuthor().getId(), champion, skin, randomNature);
 
 			String successMessage = String.format(
 					"**Victory!** You've bound a level %d %s to your will. The stars of Targon shine in your favor!",
@@ -157,17 +166,18 @@ public class ChampionCatchingService {
 		userRepository.save(user);
 	}
 
-	private void createCaughtChampion(String userId, Champion champion, ChampionSkin skin) {
+	private void createCaughtChampion(String userId, Champion champion, ChampionSkin skin, Nature nature) {
 		CaughtChampion caughtChampion = new CaughtChampion();
 		Set<SummonerSpell> uniqueSummonerSpells = assignTwoUniqueSummonerSpells();
 		Set<Rune> uniqueRunes = assignTwoUniqueRunes();
 		caughtChampion.setUser(userRepository.findByDiscordId(userId));
 		caughtChampion.setChampion(champion);
 		caughtChampion.setSkin(skin);
+		caughtChampion.setNature(nature);
 		caughtChampion.setSummonerSpells(uniqueSummonerSpells);
 		caughtChampion.setRunes(uniqueRunes);
 		caughtChampion.setCaughtAt(LocalDateTime.now());
-		
+
 		caughtChampionRepository.save(caughtChampion);
 	}
 
@@ -177,12 +187,17 @@ public class ChampionCatchingService {
 		Set<Rune> uniqueRunes = new HashSet<>(allRunes.subList(0, 2)); // Assign the first two from the shuffled list
 		return uniqueRunes;
 	}
-	
+
 	private Set<SummonerSpell> assignTwoUniqueSummonerSpells() {
 		List<SummonerSpell> allSpells = summonerSpellRepository.findAll();
 		Collections.shuffle(allSpells);
 		Set<SummonerSpell> uniqueSummonerSpells = new HashSet<>(allSpells.subList(0, 2));
 		return uniqueSummonerSpells;
 	}
+
+	// Fetch a random nature for the champion
+	private Nature getRandomNature() {
+		List<Nature> allNatures = natureRepository.findAll();
+		return allNatures.get(random.nextInt(allNatures.size()));
 	}
 }

@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import lombok.Data;
 
 @Data
@@ -46,6 +47,9 @@ public class Champion {
 	private Set<Role> roles;
 
 	private String ownerId; // The Discord ID of the user who caught the champion
+
+	@OneToOne
+	private Nature nature;
 
 	// Manually define hashCode and equals to ignore the runes, summonerSpells,
 	// stats, iv, and roles fields

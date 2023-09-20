@@ -13,6 +13,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -29,6 +30,9 @@ public class CaughtChampion {
 
 	@ManyToOne
 	private Champion champion;
+
+	@OneToOne
+	private Nature nature;
 
 	@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
 	@JoinTable(name = "caught_champion_runes", joinColumns = @JoinColumn(name = "caught_champion_id"), inverseJoinColumns = @JoinColumn(name = "rune_id"))
