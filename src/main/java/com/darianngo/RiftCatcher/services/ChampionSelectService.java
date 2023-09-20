@@ -38,9 +38,6 @@ public class ChampionSelectService {
 	private StarterChampionRepository starterChampionRepository;
 
 	@Autowired
-	private CollectionService collectionService;
-
-	@Autowired
 	private UserRepository userRepository;
 
 	@Autowired

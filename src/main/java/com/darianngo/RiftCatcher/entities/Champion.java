@@ -26,8 +26,6 @@ public class Champion {
 	@ManyToOne
 	private ChampionRarity rarity;
 
-	private Integer level;
-
 	@ManyToOne
 	private Stats stats;
 
@@ -45,8 +43,6 @@ public class Champion {
 
 	@ManyToMany
 	private Set<Role> roles;
-
-	private String ownerId; // The Discord ID of the user who caught the champion
 
 	@OneToOne
 	private Nature nature;

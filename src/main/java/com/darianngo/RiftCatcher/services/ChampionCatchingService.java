@@ -61,6 +61,9 @@ public class ChampionCatchingService {
 	private final NatureRepository natureRepository;
 
 	@Autowired
+	LevelingService levelingService;
+
+	@Autowired
 	UserService userService;
 
 	// Cooldown management
@@ -134,11 +137,11 @@ public class ChampionCatchingService {
 			Nature randomNature = getRandomNature();
 
 			// Create the caught champion record
-			createCaughtChampion(event.getAuthor().getId(), champion, skin, randomNature);
+			CaughtChampion caught = createCaughtChampion(event.getAuthor().getId(), champion, skin, randomNature);
 
 			String successMessage = String.format(
-					"**Victory!** You've bound a level %d %s to your will. The stars of Targon shine in your favor!",
-					champion.getLevel(), champion.getName());
+					"**Victory!** You've bound a **level %d %s** to your will. The stars of Targon shine in your favor!",
+					caught.getLevel(), champion.getName());
 			event.getChannel().sendMessage(event.getAuthor().getAsMention() + " " + successMessage).queue();
 		} else {
 			// Mentioning the user and sending the defeat message
@@ -166,19 +169,24 @@ public class ChampionCatchingService {
 		userRepository.save(user);
 	}
 
-	private void createCaughtChampion(String userId, Champion champion, ChampionSkin skin, Nature nature) {
+	private CaughtChampion createCaughtChampion(String userId, Champion champion, ChampionSkin skin, Nature nature) {
 		CaughtChampion caughtChampion = new CaughtChampion();
 		Set<SummonerSpell> uniqueSummonerSpells = assignTwoUniqueSummonerSpells();
 		Set<Rune> uniqueRunes = assignTwoUniqueRunes();
+		int randomLevel = levelingService.getRandomChampionLevel();
+
 		caughtChampion.setUser(userRepository.findByDiscordId(userId));
 		caughtChampion.setChampion(champion);
 		caughtChampion.setSkin(skin);
 		caughtChampion.setNature(nature);
 		caughtChampion.setSummonerSpells(uniqueSummonerSpells);
 		caughtChampion.setRunes(uniqueRunes);
+		caughtChampion.setLevel(randomLevel);
 		caughtChampion.setCaughtAt(LocalDateTime.now());
 
 		caughtChampionRepository.save(caughtChampion);
+
+		return caughtChampion;
 	}
 
 	private Set<Rune> assignTwoUniqueRunes() {

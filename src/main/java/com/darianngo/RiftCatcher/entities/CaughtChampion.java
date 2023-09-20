@@ -49,7 +49,8 @@ public class CaughtChampion {
 	@ManyToOne
 	@JoinColumn(name = "skin_id")
 	private ChampionSkin skin;
-	private Integer level;
+	private Integer level = 1;
+	private Integer experience = 0;
 	private Integer health;
 	private Integer mana;
 

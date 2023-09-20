@@ -18,10 +18,7 @@ public class UserService {
 
 	@Autowired
 	private UserRepository userRepository;
-
-	@Autowired
-	private CollectionService collectionService;
-
+	
 	@Autowired
 	private StarterChampionRepository starterChampionRepository;
 

@@ -2,6 +2,7 @@ package com.darianngo.RiftCatcher.services;
 
 import java.awt.Color;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
