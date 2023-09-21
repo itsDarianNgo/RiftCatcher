@@ -2,7 +2,11 @@ package com.darianngo.RiftCatcher.services;
 
 import java.awt.Color;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,15 +18,23 @@ import com.darianngo.RiftCatcher.entities.CaughtChampion;
 import com.darianngo.RiftCatcher.entities.Champion;
 import com.darianngo.RiftCatcher.entities.ChampionSkin;
 import com.darianngo.RiftCatcher.entities.ChampionSkinRarity;
+import com.darianngo.RiftCatcher.entities.IVs;
+import com.darianngo.RiftCatcher.entities.Nature;
+import com.darianngo.RiftCatcher.entities.Rune;
 import com.darianngo.RiftCatcher.entities.StarterChampion;
+import com.darianngo.RiftCatcher.entities.SummonerSpell;
 import com.darianngo.RiftCatcher.entities.User;
 import com.darianngo.RiftCatcher.repositories.CaughtChampionRepository;
 import com.darianngo.RiftCatcher.repositories.ChampionRepository;
+import com.darianngo.RiftCatcher.repositories.NatureRepository;
+import com.darianngo.RiftCatcher.repositories.RuneRepository;
 import com.darianngo.RiftCatcher.repositories.StarterChampionRepository;
+import com.darianngo.RiftCatcher.repositories.SummonerSpellRepository;
 import com.darianngo.RiftCatcher.repositories.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -30,27 +42,42 @@ import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
 @Service
+@RequiredArgsConstructor
 public class ChampionSelectService {
 
+	private final Random random = new Random();
+
 	private static final Logger logger = LoggerFactory.getLogger(ChampionSelectService.class);
-	
-	@Autowired
-	private StarterChampionRepository starterChampionRepository;
 
 	@Autowired
-	private UserRepository userRepository;
+	private final StarterChampionRepository starterChampionRepository;
 
 	@Autowired
-	private RedisManager redisManager;
+	private final UserRepository userRepository;
 
 	@Autowired
-	ChampionRepository championRepository;
+	private final RedisManager redisManager;
 
 	@Autowired
-	ChampionAndSkinRarityService championAndSkinRarityService;
+	private final ChampionRepository championRepository;
 
 	@Autowired
-	CaughtChampionRepository caughtChampionRepository;
+	private final ChampionAndSkinRarityService championAndSkinRarityService;
+
+	@Autowired
+	private final ChampionAttributesService championAttributesService;
+
+	@Autowired
+	private final CaughtChampionRepository caughtChampionRepository;
+
+	@Autowired
+	private final RuneRepository runeRepository;
+
+	@Autowired
+	private final NatureRepository natureRepository;
+
+	@Autowired
+	private final SummonerSpellRepository summonerSpellRepository;
 
 	private static final int CHAMPIONS_PER_PAGE = 1;
 
@@ -194,7 +221,11 @@ public class ChampionSelectService {
 		// Fetch a random skin of the chosen rarity for the designated champion
 		ChampionSkin starterChampionSkin = championAndSkinRarityService.getRandomSkinByRarity(champion, skinRarity);
 
-		// Add additional logic here to generate stats, etc. for the starter champion
+		Set<SummonerSpell> uniqueSummonerSpells = assignTwoUniqueSummonerSpells();
+		Set<Rune> uniqueRunes = assignTwoUniqueRunes();
+		IVs championIVs = championAttributesService.generateIVs();
+		// Fetch a random nature when a champion is caught
+		Nature randomNature = getRandomNature();
 
 		// Create a new CaughtChampion and save
 		CaughtChampion newCaughtChampion = new CaughtChampion();
@@ -202,6 +233,12 @@ public class ChampionSelectService {
 		newCaughtChampion.setChampion(champion);
 		newCaughtChampion.setCaughtAt(LocalDateTime.now());
 		newCaughtChampion.setSkin(starterChampionSkin);
+		newCaughtChampion.setNature(randomNature);
+		newCaughtChampion.setSummonerSpells(uniqueSummonerSpells);
+		newCaughtChampion.setRunes(uniqueRunes);
+		newCaughtChampion.setLevel(5);
+		newCaughtChampion.setIvs(championIVs);
+
 		newCaughtChampion.setStarter(true); // Mark this as a starter champion
 
 		caughtChampionRepository.save(newCaughtChampion);
@@ -219,6 +256,26 @@ public class ChampionSelectService {
 			logger.error("Champion with name {} not found.", championName);
 			throw new EntityNotFoundException("Champion not found.");
 		}
+	}
+
+	private Set<Rune> assignTwoUniqueRunes() {
+		List<Rune> allRunes = runeRepository.findAll();
+		Collections.shuffle(allRunes);
+		Set<Rune> uniqueRunes = new HashSet<>(allRunes.subList(0, 2)); // Assign the first two from the shuffled list
+		return uniqueRunes;
+	}
+
+	private Set<SummonerSpell> assignTwoUniqueSummonerSpells() {
+		List<SummonerSpell> allSpells = summonerSpellRepository.findAll();
+		Collections.shuffle(allSpells);
+		Set<SummonerSpell> uniqueSummonerSpells = new HashSet<>(allSpells.subList(0, 2));
+		return uniqueSummonerSpells;
+	}
+
+	// Fetch a random nature for the champion
+	private Nature getRandomNature() {
+		List<Nature> allNatures = natureRepository.findAll();
+		return allNatures.get(random.nextInt(allNatures.size()));
 	}
 
 }

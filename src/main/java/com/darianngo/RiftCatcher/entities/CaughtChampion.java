@@ -50,8 +50,18 @@ public class CaughtChampion {
 	@JoinColumn(name = "skin_id")
 	private ChampionSkin skin;
 	private Integer level = 1;
-	private Integer experience = 0;
-	private Integer health;
-	private Integer mana;
+	private Integer currentExperience = 0;
+	private Integer experienceToNextLevel;
+
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "ivs_id")
+	private IVs ivs;
+
+	private Integer currentHp;
+	private Integer currentAttack;
+	private Integer currentDefense;
+	private Integer currentSpAtk;
+	private Integer currentSpDef;
+	private Integer currentSpeed;
 
 }

@@ -14,9 +14,20 @@ public class Stats {
 	private Long id;
 
 	private Integer hp;
+	private Double hpGrowth;
+
 	private Integer attack;
+	private Double attackGrowth;
+
 	private Integer defense;
+	private Double defenseGrowth;
+
 	private Integer spAtk;
+	private Double spAtkGrowth;
+
 	private Integer spDef;
+	private Double spDefGrowth;
+
 	private Integer speed;
+	private Double speedGrowth;
 }

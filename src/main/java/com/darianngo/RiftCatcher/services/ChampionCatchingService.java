@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.darianngo.RiftCatcher.entities.CaughtChampion;
 import com.darianngo.RiftCatcher.entities.Champion;
 import com.darianngo.RiftCatcher.entities.ChampionSkin;
+import com.darianngo.RiftCatcher.entities.IVs;
 import com.darianngo.RiftCatcher.entities.Nature;
 import com.darianngo.RiftCatcher.entities.Rune;
 import com.darianngo.RiftCatcher.entities.SpawnEvent;
@@ -59,6 +60,9 @@ public class ChampionCatchingService {
 
 	@Autowired
 	private final NatureRepository natureRepository;
+
+	@Autowired
+	private final ChampionAttributesService championAttributesService;
 
 	@Autowired
 	LevelingService levelingService;
@@ -171,8 +175,10 @@ public class ChampionCatchingService {
 
 	private CaughtChampion createCaughtChampion(String userId, Champion champion, ChampionSkin skin, Nature nature) {
 		CaughtChampion caughtChampion = new CaughtChampion();
+		
 		Set<SummonerSpell> uniqueSummonerSpells = assignTwoUniqueSummonerSpells();
 		Set<Rune> uniqueRunes = assignTwoUniqueRunes();
+		IVs championIVs = championAttributesService.generateIVs();
 		int randomLevel = levelingService.getRandomChampionLevel();
 
 		caughtChampion.setUser(userRepository.findByDiscordId(userId));
@@ -182,6 +188,7 @@ public class ChampionCatchingService {
 		caughtChampion.setSummonerSpells(uniqueSummonerSpells);
 		caughtChampion.setRunes(uniqueRunes);
 		caughtChampion.setLevel(randomLevel);
+		caughtChampion.setIvs(championIVs);
 		caughtChampion.setCaughtAt(LocalDateTime.now());
 
 		caughtChampionRepository.save(caughtChampion);
