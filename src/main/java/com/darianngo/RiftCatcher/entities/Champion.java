@@ -40,7 +40,7 @@ public class Champion {
 	@OneToMany(mappedBy = "champion", cascade = CascadeType.ALL)
 	private Set<ChampionSkin> skins;
 
-	@ManyToMany
-	private Set<Role> roles;
+	@ManyToOne
+	private Role role;
 
 }

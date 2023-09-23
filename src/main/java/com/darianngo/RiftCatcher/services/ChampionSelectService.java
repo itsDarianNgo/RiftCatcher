@@ -160,7 +160,7 @@ public class ChampionSelectService {
 
 		EmbedBuilder embed = new EmbedBuilder().setTitle("Welcome to the world of Runeterra!").setColor(Color.CYAN)
 				.setDescription(
-						"To embark on your journey, select a starter champion using the `@RiftCatcher select <champion>` command.")
+						"To embark on your journey, select a starter champion using the `@RiftCatchers select <champion>` command.")
 				.setFooter("Page " + (pageIndex + 1) + " / " + ((champions.size() - 1) / CHAMPIONS_PER_PAGE + 1));
 
 		int startIndex = pageIndex * CHAMPIONS_PER_PAGE;

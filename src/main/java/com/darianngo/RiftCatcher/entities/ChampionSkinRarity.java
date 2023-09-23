@@ -12,7 +12,6 @@ import lombok.Data;
 public class ChampionSkinRarity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "skin_rarity")
 	private Long id;
 
 	private String rarity; // Common, Rare, Epic, Legendary, Mythic, Ultimate

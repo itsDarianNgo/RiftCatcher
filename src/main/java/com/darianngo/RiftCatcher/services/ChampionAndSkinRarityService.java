@@ -91,8 +91,8 @@ public class ChampionAndSkinRarityService extends ListenerAdapter {
 
 		// Base probabilities (these could be adjusted)
 		double commonProb = 0.80; // 80%
-		double uncommonProb = 0.15; // 15%
-		double rareProb = 0.03; // 3%
+		double rareProb = 0.15; // 15%
+		double epicProb = 0.03; // 3%
 		double legendaryProb = 0.02; // 2%
 
 		// 1. Time-based adjustments
@@ -108,8 +108,8 @@ public class ChampionAndSkinRarityService extends ListenerAdapter {
 
 		// Set the probabilities (use string values or database IDs as the keys)
 		rarityProbabilities.put("COMMON", commonProb);
-		rarityProbabilities.put("UNCOMMON", uncommonProb);
 		rarityProbabilities.put("RARE", rareProb);
+		rarityProbabilities.put("EPIC", epicProb);
 		rarityProbabilities.put("LEGENDARY", legendaryProb);
 
 		// Choose a rarity based on the probabilities
@@ -213,7 +213,7 @@ public class ChampionAndSkinRarityService extends ListenerAdapter {
 		// Initialize probabilities
 		Map<String, Double> skinRarityProbabilities = new HashMap<>();
 
-		// Base probabilities (these could be adjusted)
+		// Base probabilities (these could be adjusted
 		double commonProb = 0.92; // 92%
 		double rareProb = 0.05; // 5%
 		double epicProb = 0.02; // 2%

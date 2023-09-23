@@ -92,7 +92,7 @@ public class ChampionCatchingService {
 
 		String championName = extractChampionNameFromCommand(event.getMessage().getContentRaw());
 		if (championName == null) {
-			event.getChannel().sendMessage("Invalid command format! Use `@RiftCatcher catch <champion-name>`").queue();
+			event.getChannel().sendMessage("Invalid command format! Use `@RiftCatchers catch <champion-name>`").queue();
 			return;
 		}
 

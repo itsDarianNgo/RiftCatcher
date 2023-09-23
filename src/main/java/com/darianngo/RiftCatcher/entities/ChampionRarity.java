@@ -12,7 +12,6 @@ import lombok.Data;
 public class ChampionRarity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "champion_rarity")
 	private Long id;
 
 	private String rarity;

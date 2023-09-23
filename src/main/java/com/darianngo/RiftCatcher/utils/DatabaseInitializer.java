@@ -49,19 +49,19 @@ public class DatabaseInitializer implements CommandLineRunner {
 		// Initialize rarities FIRST
 		initializeRarities();
 		// Initialize Champions and Skins
-		initializeChampionWithSkins("Garen", "COMMON");
-		initializeChampionWithSkins("Ahri", "COMMON");
-		initializeChampionWithSkins("Yasuo", "UNCOMMON");
-		initializeChampionWithSkins("Lux", "UNCOMMON");
-		initializeChampionWithSkins("Zed", "RARE");
-		initializeChampionWithSkins("Thresh", "RARE");
-		initializeChampionWithSkins("Teemo", "LEGENDARY");
-		initializeChampionWithSkins("Annie", "LEGENDARY");
+//		initializeChampionWithSkins("Garen", "COMMON");
+//		initializeChampionWithSkins("Ahri", "COMMON");
+//		initializeChampionWithSkins("Yasuo", "UNCOMMON");
+//		initializeChampionWithSkins("Lux", "UNCOMMON");
+//		initializeChampionWithSkins("Zed", "RARE");
+//		initializeChampionWithSkins("Thresh", "RARE");
+//		initializeChampionWithSkins("Teemo", "LEGENDARY");
+//		initializeChampionWithSkins("Annie", "LEGENDARY");
 	}
 
 	private void initializeRarities() {
 		// Initialize Champion Rarities
-		List<String> rarities = Arrays.asList("COMMON", "UNCOMMON", "RARE", "LEGENDARY", "ULTIMATE");
+		List<String> rarities = Arrays.asList("COMMON", "RARE", "EPIC", "LEGENDARY", "ULTIMATE");
 		for (String rarity : rarities) {
 			ChampionRarity championRarity = new ChampionRarity();
 			championRarity.setRarity(rarity);
@@ -69,7 +69,7 @@ public class DatabaseInitializer implements CommandLineRunner {
 		}
 
 		// Initialize Champion Skin Rarities
-		List<String> skinRarities = Arrays.asList("COMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC", "ULTIMATE");
+		List<String> skinRarities = Arrays.asList("DEFAULT", "COMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC", "ULTIMATE");
 		for (String skinRarity : skinRarities) {
 			ChampionSkinRarity entity = new ChampionSkinRarity();
 			entity.setRarity(skinRarity);
