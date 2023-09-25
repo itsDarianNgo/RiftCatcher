@@ -3,6 +3,7 @@ package com.darianngo.RiftCatcher.services;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -64,15 +65,35 @@ public class CloudinaryBatchUploadService {
 		Set<String> uploadedImages = loadUploadedImages();
 
 		Files.walk(directoryPath, 2).filter(Files::isRegularFile).forEach(file -> {
-			try {
-				if (!uploadedImages.contains(file.toString())) {
-					processFile(file, championSkinRarities);
-					logUploadedImage(file);
-					Thread.sleep(100);
+			int maxRetries = 10; // You can adjust this value based on your preference
+			int currentTry = 0;
+
+			while (currentTry < maxRetries) {
+				try {
+					if (!uploadedImages.contains(file.toString())) {
+						processFile(file, championSkinRarities);
+						logUploadedImage(file);
+						Thread.sleep(1);
+					}
+					break; // If successful, break out of the loop
+				} catch (UnknownHostException uhe) {
+					System.err.println("Encountered UnknownHostException. Retrying in 5 seconds...");
+					currentTry++;
+					if (currentTry >= maxRetries) {
+						System.err.println("Max retries reached. Skipping file: " + file.toString());
+					} else {
+						try {
+							Thread.sleep(5000); // Wait for 5 seconds before retrying
+						} catch (InterruptedException ie) {
+							System.err.println("Interrupted during sleep. Exiting.");
+							break;
+						}
+					}
+				} catch (IOException | InterruptedException e) {
+					System.err.println("Error processing file: " + file.toString());
+					e.printStackTrace();
+					break; // If it's another exception, we don't retry
 				}
-			} catch (IOException | InterruptedException e) {
-				System.err.println("Error processing file: " + file.toString());
-				e.printStackTrace();
 			}
 		});
 	}
@@ -83,9 +104,9 @@ public class CloudinaryBatchUploadService {
 		String folderPath = "RiftCatchers/" + championName.toString();
 		String[] tags = { championName.toString(), skinName };
 
-		if (cloudinaryService.imageWithTagExists(tags)) {
-			return;
-		}
+//		if (cloudinaryService.imageWithTagExists(tags)) {
+//			return;
+//		}
 
 		String imageURL = cloudinaryService.uploadFile(Files.readAllBytes(file), folderPath, tags);
 		System.out.println(

@@ -20,20 +20,20 @@ public class RiftCatcherApplication {
 		SpringApplication.run(RiftCatcherApplication.class, args);
 	}
 
-	@Bean
-	public CommandLineRunner run(ChampionDataPopulationService dataService,
-			CloudinaryBatchUploadService uploadService) {
-		return args -> {
-			dataService.populateDatabaseFromCsv("C:/Users/daria/OneDrive/Desktop/RiftCatcher - Champion Stats.csv");
-
-			// Parse the skin rarities from the CSV
-			Map<String, String> championSkinRarities = uploadService
-					.parseSkinRaritiesFromCsv("C:/Users/daria/OneDrive/Desktop/RiftCatchers - Data/skins_data.csv");
-
-			// Execute the batch upload for Cloudinary
-			uploadService.uploadChampionImages(
-					Paths.get("C:/Users/daria/OneDrive/Desktop/RiftCatchers - Data/champion_skins"),
-					championSkinRarities);
-		};
-	}
+//	@Bean
+//	public CommandLineRunner run(ChampionDataPopulationService dataService,
+//			CloudinaryBatchUploadService uploadService) {
+//		return args -> {
+//			dataService.populateDatabaseFromCsv("C:/Users/daria/OneDrive/Desktop/RiftCatchers - Data/RiftCatcher - Champion Stats.csv");
+//
+//			// Parse the skin rarities from the CSV
+//			Map<String, String> championSkinRarities = uploadService
+//					.parseSkinRaritiesFromCsv("C:/Users/daria/OneDrive/Desktop/RiftCatchers - Data/skins_data_original - Copy.csv");
+//
+//			// Execute the batch upload for Cloudinary
+//			uploadService.uploadChampionImages(
+//					Paths.get("C:/Users/daria/OneDrive/Desktop/RiftCatchers - Data/champion_skins"),
+//					championSkinRarities);
+//		};
+//	}
 }

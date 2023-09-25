@@ -24,6 +24,7 @@ public interface ChampionMapper {
 	@Mapping(source = "baseChampion.name", target = "name")
 	@Mapping(source = "baseChampion.rarity.rarity", target = "rarity")
 	@Mapping(source = "currentSkin", target = "currentSkinName", qualifiedByName = "mapCurrentSkinName")
+	@Mapping(source = "currentSkin.imageUrl", target = "currentSkinImageUrl")
 	ChampionDTO spawnedChampionToChampionDTO(SpawnedChampion spawnedChampion);
 
 	default String mapRarity(ChampionRarity rarity) {
@@ -53,6 +54,8 @@ public interface ChampionMapper {
 	@Named("mapCurrentSkinName")
 	default String mapCurrentSkinName(ChampionSkin currentSkin) {
 		if (currentSkin != null) {
+			System.out.println("Mapping Skin: " + currentSkin.getName());
+			System.out.println("Mapping Skin Image URL: " + currentSkin.getImageUrl());
 			return currentSkin.getName();
 		}
 		return "Default";

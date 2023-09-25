@@ -22,6 +22,7 @@ public class ChampionDTO {
 	private Set<String> summonerSpellNames;
 	private Set<String> skinNames;
 	private String currentSkinName;
+	private String currentSkinImageUrl;
 	private Set<String> roles;
 
 	private String ownerId;

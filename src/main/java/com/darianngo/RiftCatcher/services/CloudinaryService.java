@@ -21,17 +21,17 @@ public class CloudinaryService {
 		return result.get("url").toString();
 	}
 
-	public boolean imageWithTagExists(String... tags) {
-		try {
-			// Construct the search expression for all tags
-			String expression = String.join(" AND ", (CharSequence[]) tags); // Convert tags to a search expression
-			Map<?, ?> result = cloudinary.search().expression(expression).maxResults(1).execute();
-			Object totalCount = result.get("total_count");
-			return totalCount != null && (int) totalCount > 0;
-		} catch (Exception e) {
-			// Log or print the error message for diagnostics
-			e.printStackTrace();
-			return false; // Default behavior
-		}
-	}
+//	public boolean imageWithTagExists(String... tags) {
+//		try {
+//			// Construct the search expression for all tags
+//			String expression = String.join(" AND ", (CharSequence[]) tags); // Convert tags to a search expression
+//			Map<?, ?> result = cloudinary.search().expression(expression).maxResults(1).execute();
+//			Object totalCount = result.get("total_count");
+//			return totalCount != null && (int) totalCount > 0;
+//		} catch (Exception e) {
+//			// Log or print the error message for diagnostics
+//			e.printStackTrace();
+//			return false; // Default behavior
+//		}
+//	}
 }

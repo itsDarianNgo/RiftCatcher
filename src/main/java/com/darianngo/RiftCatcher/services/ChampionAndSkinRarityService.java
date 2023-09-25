@@ -1,6 +1,7 @@
 package com.darianngo.RiftCatcher.services;
 
 import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +54,10 @@ public class ChampionAndSkinRarityService extends ListenerAdapter {
 	private LocalTime lastUniqueSkinSpawnTime;
 
 	private static final Logger logger = LoggerFactory.getLogger(ChampionAndSkinRarityService.class);
+
+	// List of rarities in descending order of rarity
+	private static final List<String> RARITIES_ORDER = Arrays.asList("ULTIMATE", "MYTHIC", "LEGENDARY", "EPIC", "RARE",
+			"COMMON", "DEFAULT");
 
 	@Transactional
 	public SpawnedChampion spawnChampion() {
@@ -213,13 +218,14 @@ public class ChampionAndSkinRarityService extends ListenerAdapter {
 		// Initialize probabilities
 		Map<String, Double> skinRarityProbabilities = new HashMap<>();
 
-		// Base probabilities (these could be adjusted
-		double commonProb = 0.92; // 92%
-		double rareProb = 0.05; // 5%
-		double epicProb = 0.02; // 2%
-		double legendaryProb = 0.005; // 0.5%
-		double mythicProb = 0.0025; // 0.25%
-		double ultimateProb = 0.0005; // 0.05%
+		// Base probabilities (these could be adjusted)
+		double defaultProb = 0.60; // 60%
+		double commonProb = 0.30; // 30%
+		double rareProb = 0.08; // 8%
+		double epicProb = 0.01496; // 1.496%
+		double legendaryProb = 0.003333; // 0.3333% (Max Raid Battle Shiny Rate)
+		double mythicProb = 0.001463; // 0.1463% (Masuda Method Shiny Rate)
+		double ultimateProb = 0.000244; // 0.0244% (Regular Pokémon Shiny Rate)
 
 		// 1. Champion Rarity-based adjustments
 //		if ("LEGENDARY".equals(champion.getRarity().getRarity())) {
@@ -243,6 +249,7 @@ public class ChampionAndSkinRarityService extends ListenerAdapter {
 		}
 
 		// Set the probabilities (use string values or database IDs as the keys)
+		skinRarityProbabilities.put("DEFAULT", defaultProb);
 		skinRarityProbabilities.put("COMMON", commonProb);
 		skinRarityProbabilities.put("RARE", rareProb);
 		skinRarityProbabilities.put("EPIC", epicProb);
@@ -271,8 +278,22 @@ public class ChampionAndSkinRarityService extends ListenerAdapter {
 				rarity.getRarity());
 
 		List<ChampionSkin> skins = championSkinRepository.findByChampionAndSkinRarity(champion, rarity);
+
+		// If there are no skins of the chosen rarity, try the next rarity in line
+		int index = RARITIES_ORDER.indexOf(rarity.getRarity());
+		while (skins.isEmpty() && index < RARITIES_ORDER.size() - 1) {
+			index++;
+			rarity = championSkinRarityRepository.findByRarity(RARITIES_ORDER.get(index));
+			skins = championSkinRepository.findByChampionAndSkinRarity(champion, rarity);
+		}
+
 		logger.info("Fetched {} skins for champion: {} and rarity: {}", skins.size(), champion.getName(),
 				rarity.getRarity());
+
+		// If no skin is found even after falling back, throw an exception
+		if (skins.isEmpty()) {
+			throw new RuntimeException("No skin found for champion: " + champion.getName());
+		}
 
 		Map<ChampionSkin, Double> skinProbabilities = new HashMap<>();
 		double baseProb = 1.0 / skins.size();

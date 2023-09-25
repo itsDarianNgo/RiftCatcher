@@ -17,4 +17,6 @@ public interface ChampionSkinRepository extends JpaRepository<ChampionSkin, Long
 
 	ChampionSkin findByChampion_NameAndName(String championName, String skinName);
 
+	ChampionSkin findByChampionAndName(Champion champion, String string);
+
 }

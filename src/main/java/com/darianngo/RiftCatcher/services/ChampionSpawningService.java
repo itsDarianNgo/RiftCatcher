@@ -2,7 +2,6 @@ package com.darianngo.RiftCatcher.services;
 
 import java.awt.Color;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
@@ -85,12 +84,13 @@ public class ChampionSpawningService {
 				spawnEvent.setSpawnTime(LocalDateTime.now());
 				spawnEvent.setDiscordChannelId(channel.getId());
 				spawnEvent.setDiscordServerId(serverId);
-				SpawnEvent savedSpawnEvent = spawnEventRepository.saveAndFlush(spawnEvent); // Save and get the saved
-																							// entity
+				SpawnEvent savedSpawnEvent = spawnEventRepository.saveAndFlush(spawnEvent);
 
 				// Convert saved entities to DTOs
 				ChampionDTO championDTO = championMapper.spawnedChampionToChampionDTO(champion);
-				logger.info("Mapped champion skin name: " + championDTO.getCurrentSkinName());
+				System.out.println("DTO Skin Name: " + championDTO.getCurrentSkinName());
+				System.out.println("DTO Skin Image URL: " + championDTO.getCurrentSkinImageUrl());
+				;
 
 				// Create and send the embed
 				MessageEmbed messageEmbed = createChampionEmbed(championDTO);
@@ -107,10 +107,11 @@ public class ChampionSpawningService {
 		EmbedBuilder embedBuilder = new EmbedBuilder();
 		embedBuilder.setTitle("A Wild Champion Has Appeared!");
 		embedBuilder.setColor(Color.CYAN);
-		embedBuilder.setDescription("Guess the champion and type `@RiftCatcher [Champion Name]` to catch it!");
+		embedBuilder.setDescription("Guess the champion and type `@RiftCatchers [Champion Name]` to catch it!");
 		embedBuilder.addField("Champion", championDTO.getName(), true);
 		embedBuilder.addField("Rarity", championDTO.getRarity(), true);
 		embedBuilder.addField("Current Skin", championDTO.getCurrentSkinName(), true);
+		embedBuilder.setImage(championDTO.getCurrentSkinImageUrl());
 
 		return embedBuilder.build();
 	}
