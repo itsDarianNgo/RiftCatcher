@@ -107,7 +107,7 @@ public class ChampionSpawningService {
 		EmbedBuilder embedBuilder = new EmbedBuilder();
 		embedBuilder.setTitle("A Wild Champion Has Appeared!");
 		embedBuilder.setColor(Color.CYAN);
-		embedBuilder.setDescription("Guess the champion and type `@RiftCatchers [Champion Name]` to catch it!");
+		embedBuilder.setDescription("Guess the champion and type `@RiftCatchers catch [Champion Name]` to catch it!");
 		embedBuilder.addField("Champion", championDTO.getName(), true);
 		embedBuilder.addField("Rarity", championDTO.getRarity(), true);
 		embedBuilder.addField("Current Skin", championDTO.getCurrentSkinName(), true);
