@@ -37,25 +37,25 @@ public class UserService {
 			user = createUser(event.getAuthor());
 		}
 
-		// Check if user has already signed up
-		if (user.getHasSignedUp()) {
-			event.getChannel().sendMessage(event.getAuthor().getAsMention() + " You have already started your journey!")
-					.queue();
-			return;
-		}
-
-		// Check if user has chosen a starter champion
-		if (user.getChampionsCaught() != null && user.getChampionsCaught() > 0) {
-			event.getChannel()
-					.sendMessage(event.getAuthor().getAsMention() + " You have already selected your starter champion!")
-					.queue();
-			return;
-		}
+//		// Check if user has already signed up
+//		if (user.getHasSignedUp()) {
+//			event.getChannel().sendMessage(event.getAuthor().getAsMention() + " You have already started your journey!")
+//					.queue();
+//			return;
+//		}
+//
+//		// Check if user has chosen a starter champion
+//		if (user.getChampionsCaught() != null && user.getChampionsCaught() > 0) {
+//			event.getChannel()
+//					.sendMessage(event.getAuthor().getAsMention() + " You have already selected your starter champion!")
+//					.queue();
+//			return;
+//		}
 
 		// Save the user's ID in Redis using the message ID of the original command as a
 		// key
 		String key = event.getMessageId() + ":startCommandUser";
-		redisManager.setExpiringKey(key, event.getAuthor().getId(), 300); // Expires in 5 minutes
+		redisManager.setExpiringKey(key, event.getAuthor().getId(), 3000); // Expires in 5 minutes
 
 		// Send paginated champion embeds to select from
 		championSelectService.sendChampionEmbed(event, 0);

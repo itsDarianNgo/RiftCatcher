@@ -13,12 +13,15 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Entity
 @Data
+@EqualsAndHashCode(exclude = { "caughtChampionRunes" })
 @Table(name = "caught_champions")
 public class CaughtChampion {
 	@Id
@@ -31,14 +34,14 @@ public class CaughtChampion {
 	@ManyToOne
 	private Champion champion;
 
-	@OneToOne
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "nature_id")
 	private Nature nature;
 
-	@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
-	@JoinTable(name = "caught_champion_runes", joinColumns = @JoinColumn(name = "caught_champion_id"), inverseJoinColumns = @JoinColumn(name = "rune_id"))
-	private Set<Rune> runes; // Should contain exactly 2 runes
+	@OneToMany(mappedBy = "caughtChampion", cascade = CascadeType.ALL)
+	private Set<CaughtChampionRune> caughtChampionRunes;
 
-	@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+	@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.MERGE })
 	@JoinTable(name = "caught_champion_spells", joinColumns = @JoinColumn(name = "caught_champion_id"), inverseJoinColumns = @JoinColumn(name = "summoner_spell_id"))
 	private Set<SummonerSpell> summonerSpells;
 

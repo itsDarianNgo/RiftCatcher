@@ -7,7 +7,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.Data;
@@ -30,12 +29,6 @@ public class Champion {
 
 	@ManyToOne
 	private Stats baseStats;
-
-	@ManyToMany
-	private Set<Rune> runes;
-
-	@ManyToMany
-	private Set<SummonerSpell> summonerSpells;
 
 	@OneToMany(mappedBy = "champion", cascade = CascadeType.ALL)
 	private Set<ChampionSkin> skins;

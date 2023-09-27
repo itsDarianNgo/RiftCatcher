@@ -1,19 +1,13 @@
 package com.darianngo.RiftCatcher;
 
-import java.nio.file.Paths;
-import java.util.Map;
-
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
-
-import com.darianngo.RiftCatcher.services.CloudinaryBatchUploadService;
-import com.darianngo.RiftCatcher.utils.ChampionDataPopulationService;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @SpringBootApplication
 @EnableScheduling
+@EnableTransactionManagement
 public class RiftCatcherApplication {
 
 	public static void main(String[] args) {

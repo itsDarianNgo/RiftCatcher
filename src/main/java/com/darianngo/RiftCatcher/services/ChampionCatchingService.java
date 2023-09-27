@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.darianngo.RiftCatcher.entities.CaughtChampion;
+import com.darianngo.RiftCatcher.entities.CaughtChampionRune;
 import com.darianngo.RiftCatcher.entities.Champion;
 import com.darianngo.RiftCatcher.entities.ChampionSkin;
 import com.darianngo.RiftCatcher.entities.IVs;
@@ -24,6 +25,7 @@ import com.darianngo.RiftCatcher.entities.SpawnedChampion;
 import com.darianngo.RiftCatcher.entities.SummonerSpell;
 import com.darianngo.RiftCatcher.entities.User;
 import com.darianngo.RiftCatcher.repositories.CaughtChampionRepository;
+import com.darianngo.RiftCatcher.repositories.CaughtChampionRuneRepository;
 import com.darianngo.RiftCatcher.repositories.ChampionRepository;
 import com.darianngo.RiftCatcher.repositories.NatureRepository;
 import com.darianngo.RiftCatcher.repositories.RuneRepository;
@@ -65,6 +67,9 @@ public class ChampionCatchingService {
 	private final ChampionAttributesService championAttributesService;
 
 	@Autowired
+	private final CaughtChampionRuneRepository caughtChampionRuneRepository;
+
+	@Autowired
 	LevelingService levelingService;
 
 	@Autowired
@@ -84,11 +89,11 @@ public class ChampionCatchingService {
 			return;
 		}
 
-		// Check for cooldown
-		if (isUserOnCooldown(userId, currentTime)) {
-			event.getChannel().sendMessage("Please wait a few seconds before trying to catch again!").queue();
-			return;
-		}
+//		// Check for cooldown
+//		if (isUserOnCooldown(userId, currentTime)) {
+//			event.getChannel().sendMessage("Please wait a few seconds before trying to catch again!").queue();
+//			return;
+//		}
 
 		String championName = extractChampionNameFromCommand(event.getMessage().getContentRaw());
 		if (championName == null) {
@@ -127,7 +132,9 @@ public class ChampionCatchingService {
 			return;
 		}
 
-		boolean success = random.nextBoolean();
+//		boolean success = random.nextBoolean();
+
+		boolean success = true;
 
 		if (success) {
 			markChampionAsCaught(latestSpawn, event.getAuthor().getId());
@@ -173,9 +180,10 @@ public class ChampionCatchingService {
 		userRepository.save(user);
 	}
 
+	@Transactional
 	private CaughtChampion createCaughtChampion(String userId, Champion champion, ChampionSkin skin, Nature nature) {
 		CaughtChampion caughtChampion = new CaughtChampion();
-		
+
 		Set<SummonerSpell> uniqueSummonerSpells = assignTwoUniqueSummonerSpells();
 		Set<Rune> uniqueRunes = assignTwoUniqueRunes();
 		IVs championIVs = championAttributesService.generateIVs();
@@ -186,16 +194,32 @@ public class ChampionCatchingService {
 		caughtChampion.setSkin(skin);
 		caughtChampion.setNature(nature);
 		caughtChampion.setSummonerSpells(uniqueSummonerSpells);
-		caughtChampion.setRunes(uniqueRunes);
 		caughtChampion.setLevel(randomLevel);
 		caughtChampion.setIvs(championIVs);
 		caughtChampion.setCaughtAt(LocalDateTime.now());
 
+		// Save the CaughtChampion first so it gets an ID
+		caughtChampion = caughtChampionRepository.save(caughtChampion);
+
+		// Create CaughtChampionRune entities for each rune
+		Set<CaughtChampionRune> caughtChampionRunes = new HashSet<>();
+		for (Rune rune : uniqueRunes) {
+			CaughtChampionRune caughtChampionRune = new CaughtChampionRune();
+			caughtChampionRune.setCaughtChampion(caughtChampion);
+			caughtChampionRune.setRune(rune);
+			// Save this association
+			caughtChampionRuneRepository.save(caughtChampionRune);
+			caughtChampionRunes.add(caughtChampionRune);
+		}
+
+		// Set the caughtChampionRunes on the caughtChampion and save again
+		caughtChampion.setCaughtChampionRunes(caughtChampionRunes);
 		caughtChampionRepository.save(caughtChampion);
 
 		return caughtChampion;
 	}
 
+	@Transactional
 	private Set<Rune> assignTwoUniqueRunes() {
 		List<Rune> allRunes = runeRepository.findAll();
 		Collections.shuffle(allRunes);
@@ -203,6 +227,7 @@ public class ChampionCatchingService {
 		return uniqueRunes;
 	}
 
+	@Transactional
 	private Set<SummonerSpell> assignTwoUniqueSummonerSpells() {
 		List<SummonerSpell> allSpells = summonerSpellRepository.findAll();
 		Collections.shuffle(allSpells);

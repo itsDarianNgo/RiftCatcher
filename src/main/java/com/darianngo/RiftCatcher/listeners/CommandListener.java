@@ -3,6 +3,7 @@ package com.darianngo.RiftCatcher.listeners;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.darianngo.RiftCatcher.services.ArcanumService;
 import com.darianngo.RiftCatcher.services.ChampionCatchingService;
 import com.darianngo.RiftCatcher.services.ChampionSelectService;
 import com.darianngo.RiftCatcher.services.UserService;
@@ -15,6 +16,9 @@ public class CommandListener extends ListenerAdapter {
 
 	@Autowired
 	private ChampionCatchingService championCatchingService;
+
+	@Autowired
+	private ArcanumService arcanumService;
 
 	@Autowired
 	private UserService userService;
@@ -49,6 +53,9 @@ public class CommandListener extends ListenerAdapter {
 			case "catch":
 			case "c":
 				championCatchingService.handleCommand(event);
+				break;
+			case "arcanum":
+				arcanumService.handleArcanumCommand(event);
 				break;
 			default:
 				event.getChannel().sendMessage("Unknown command!").queue();

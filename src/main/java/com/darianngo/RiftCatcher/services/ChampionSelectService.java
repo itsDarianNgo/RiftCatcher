@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import com.darianngo.RiftCatcher.config.RedisManager;
 import com.darianngo.RiftCatcher.entities.CaughtChampion;
+import com.darianngo.RiftCatcher.entities.CaughtChampionRune;
 import com.darianngo.RiftCatcher.entities.Champion;
 import com.darianngo.RiftCatcher.entities.ChampionSkin;
 import com.darianngo.RiftCatcher.entities.ChampionSkinRarity;
@@ -25,6 +26,7 @@ import com.darianngo.RiftCatcher.entities.StarterChampion;
 import com.darianngo.RiftCatcher.entities.SummonerSpell;
 import com.darianngo.RiftCatcher.entities.User;
 import com.darianngo.RiftCatcher.repositories.CaughtChampionRepository;
+import com.darianngo.RiftCatcher.repositories.CaughtChampionRuneRepository;
 import com.darianngo.RiftCatcher.repositories.ChampionRepository;
 import com.darianngo.RiftCatcher.repositories.NatureRepository;
 import com.darianngo.RiftCatcher.repositories.RuneRepository;
@@ -78,6 +80,9 @@ public class ChampionSelectService {
 
 	@Autowired
 	private final SummonerSpellRepository summonerSpellRepository;
+
+	@Autowired
+	private final CaughtChampionRuneRepository caughtChampionRuneRepository;
 
 	private static final int CHAMPIONS_PER_PAGE = 1;
 
@@ -235,12 +240,25 @@ public class ChampionSelectService {
 		newCaughtChampion.setSkin(starterChampionSkin);
 		newCaughtChampion.setNature(randomNature);
 		newCaughtChampion.setSummonerSpells(uniqueSummonerSpells);
-		newCaughtChampion.setRunes(uniqueRunes);
 		newCaughtChampion.setLevel(5);
 		newCaughtChampion.setIvs(championIVs);
-
 		newCaughtChampion.setStarter(true); // Mark this as a starter champion
 
+		// Save the CaughtChampion first to generate an ID
+		newCaughtChampion = caughtChampionRepository.save(newCaughtChampion);
+
+		// Create and save CaughtChampionRune entities for each rune
+		Set<CaughtChampionRune> caughtChampionRunes = new HashSet<>();
+		for (Rune rune : uniqueRunes) {
+			CaughtChampionRune caughtChampionRune = new CaughtChampionRune();
+			caughtChampionRune.setCaughtChampion(newCaughtChampion);
+			caughtChampionRune.setRune(rune);
+			caughtChampionRune = caughtChampionRuneRepository.save(caughtChampionRune); // Save this association
+			caughtChampionRunes.add(caughtChampionRune);
+		}
+
+		// Update the caughtChampion with the runes and save again
+		newCaughtChampion.setCaughtChampionRunes(caughtChampionRunes);
 		caughtChampionRepository.save(newCaughtChampion);
 	}
 

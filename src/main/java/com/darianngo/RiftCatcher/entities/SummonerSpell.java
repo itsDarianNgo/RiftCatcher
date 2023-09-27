@@ -14,5 +14,5 @@ public class SummonerSpell {
 	private Long id;
 	private String name;
 	private String description;
-	private String category; // e.g., Offensive, Defensive, Utility
+	private String category;
 }

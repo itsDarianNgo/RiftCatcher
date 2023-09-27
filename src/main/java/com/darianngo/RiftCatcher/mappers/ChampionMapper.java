@@ -12,13 +12,11 @@ import com.darianngo.RiftCatcher.entities.Champion;
 import com.darianngo.RiftCatcher.entities.ChampionRarity;
 import com.darianngo.RiftCatcher.entities.ChampionSkin;
 import com.darianngo.RiftCatcher.entities.Role;
-import com.darianngo.RiftCatcher.entities.Rune;
 import com.darianngo.RiftCatcher.entities.SpawnedChampion;
 
 @Mapper(componentModel = "spring")
 public interface ChampionMapper {
 
-	@Mapping(source = "runes", target = "runeNames", qualifiedByName = "mapRuneNames")
 	ChampionDTO championToChampionDTO(Champion champion);
 
 	@Mapping(source = "baseChampion.name", target = "name")
@@ -66,8 +64,4 @@ public interface ChampionMapper {
 		return role.getName();
 	}
 
-	@Named("mapRuneNames")
-	default Set<String> mapRuneNames(Set<Rune> runes) {
-		return runes.stream().map(Rune::getName).collect(Collectors.toSet());
-	}
 }
