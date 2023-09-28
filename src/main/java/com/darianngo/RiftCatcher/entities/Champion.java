@@ -36,4 +36,7 @@ public class Champion {
 	@ManyToOne
 	private Role role;
 
+	private String emoteId;
+	private String serverId;
+
 }

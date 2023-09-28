@@ -47,20 +47,26 @@ public class ArcanumService {
 				.setFooter("Page " + (pageIndex + 1) + " / " + totalPages);
 
 		StringBuilder sb = new StringBuilder();
+		int startIdx = pageIndex * PAGE_SIZE; // Calculate the starting index based on current page index
 		for (int i = 0; i < champions.size(); i++) {
 			CaughtChampion champ = champions.get(i);
-			int number = i + 1;
-			String emote = ":_:";
+			int number = startIdx + i + 1; // Start from the correct index, not always from 1
+			String emoteId = champ.getChampion().getEmoteId();
+			String emote = emoteId != null ? "<:_:" + emoteId + ">" : ":_:";
 
 			double perfectIVPercentage = calculatePerfectIVPercentage(champ.getIvs());
 
-			sb.append("`" + number + "`").append("　").append(emote).append(" ").append(champ.getChampion().getName())
-					.append("　•　Lvl. ").append(champ.getLevel()).append("　•　")
-					.append(String.format("%.2f", perfectIVPercentage)).append("%\n");
+			// Use `String.format` for better control over formatting
+			sb.append(String.format("`%-2d`", number)).append("　").append(emote).append(" ")
+					.append(String.format("%-10s", champ.getChampion().getName())).append("　•　").append("Lvl. ")
+					.append(String.format("%-2d", champ.getLevel())).append("　•　")
+					.append(String.format("%.2f%%", perfectIVPercentage)).append("\n");
 		}
-		sb.append("Showing entries ").append((pageIndex * PAGE_SIZE) + 1).append("–")
-				.append((pageIndex * PAGE_SIZE) + champions.size()).append(" out of ").append(totalChampions)
-				.append(".");
+
+		// Correctly showing entries
+		int endIdx = startIdx + champions.size(); // Calculate the ending index based on current page index
+		sb.append("Showing entries ").append(startIdx + 1).append("–").append(endIdx).append(" out of ")
+				.append(totalChampions).append(".");
 
 		embed.setDescription(sb.toString());
 		return embed.build();
