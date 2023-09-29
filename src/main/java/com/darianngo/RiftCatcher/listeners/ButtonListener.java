@@ -34,6 +34,7 @@ public class ButtonListener extends ListenerAdapter {
 			String action = parts[0];
 			int pageIndex = Integer.parseInt(parts[1]);
 			String originalMsgId = parts[2];
+			String showSkins = parts.length > 3 ? parts[3] : "false";
 
 			String storedUserId = redisManager.retrieveValue(originalMsgId + ":startCommandUser");
 
@@ -50,7 +51,10 @@ public class ButtonListener extends ListenerAdapter {
 					break;
 				case "arcanum_page":
 					int arcanumPageIndex = Integer.parseInt(parts[1]);
-					arcanumService.showArcanum(event, arcanumPageIndex, originalMsgId);
+					arcanumService.showArcanum(event, arcanumPageIndex, originalMsgId, Boolean.parseBoolean(showSkins));
+					break;
+				case "toggle_skins":
+					arcanumService.showArcanum(event, pageIndex, originalMsgId, !Boolean.parseBoolean(showSkins));
 					break;
 				}
 

@@ -41,7 +41,8 @@ public class ArcanumService {
 	}
 
 	// Generate the arcanum embed with pagination
-	public MessageEmbed generateArcanumEmbed(List<CaughtChampion> champions, int pageIndex, long totalChampions) {
+	public MessageEmbed generateArcanumEmbed(List<CaughtChampion> champions, int pageIndex, long totalChampions,
+			boolean showSkins) {
 		int totalPages = (int) Math.ceil((double) totalChampions / PAGE_SIZE);
 		EmbedBuilder embed = new EmbedBuilder().setTitle("Your Arcanum (Champion Pool)").setColor(Color.MAGENTA)
 				.setFooter("Page " + (pageIndex + 1) + " / " + totalPages);
@@ -49,9 +50,6 @@ public class ArcanumService {
 		StringBuilder sb = new StringBuilder();
 		int startIdx = pageIndex * PAGE_SIZE; // Calculate the starting index based on current page index
 
-		// Calculate the max length of champion names for this page
-		int maxNameLength = champions.stream().map(champ -> champ.getChampion().getName().length())
-				.max(Integer::compare).orElse(0);
 		for (int i = 0; i < champions.size(); i++) {
 			CaughtChampion champ = champions.get(i);
 			int number = startIdx + i + 1; // Start from the correct index, not always from 1
@@ -74,6 +72,12 @@ public class ArcanumService {
 			// Combine them together with the emote
 			String row = numPart + emote + namePart + "    " + restOfRow;
 
+			if (showSkins) {
+				// Add skins to your row if `showSkins` is true
+				String skinPart = String.format("`%-15s`", champ.getSkin().getName());
+				row += "　•　" + skinPart;
+			}
+
 			sb.append(row).append("\n");
 		}
 
@@ -86,10 +90,9 @@ public class ArcanumService {
 		return embed.build();
 	}
 
-	public void showArcanum(ButtonInteractionEvent event, int pageIndex, String originalMsgId) {
+	public void showArcanum(ButtonInteractionEvent event, int pageIndex, String originalMsgId, boolean showSkins) {
 		event.deferEdit().queue();
 
-		// Assume you have a method to get the user by Discord ID
 		User user = userRepository.findByDiscordId(event.getUser().getId());
 		if (user == null) {
 			// Handle this scenario
@@ -99,21 +102,31 @@ public class ArcanumService {
 		List<CaughtChampion> champions = getCaughtChampions(user.getId(), pageIndex);
 		long totalChampions = getTotalCaughtChampions(user.getId());
 		boolean isLastPage = (pageIndex + 1) >= Math.ceil((double) totalChampions / PAGE_SIZE);
-		MessageEmbed arcanumEmbed = generateArcanumEmbed(champions, pageIndex, totalChampions);
+		MessageEmbed arcanumEmbed = generateArcanumEmbed(champions, pageIndex, totalChampions, showSkins);
 
 		// Generate Arcanum pagination buttons
 		Button prevButton = createArcanumButton("arcanum_page", pageIndex - 1, originalMsgId, "Previous",
-				pageIndex == 0);
-		Button nextButton = createArcanumButton("arcanum_page", pageIndex + 1, originalMsgId, "Next", isLastPage);
+				pageIndex == 0, showSkins);
+		Button nextButton = createArcanumButton("arcanum_page", pageIndex + 1, originalMsgId, "Next", isLastPage,
+				showSkins);
+		Button toggleSkinsButton = createArcanumSecondaryButton("toggle_skins", pageIndex, originalMsgId,
+				showSkins ? "Hide Skins" : "Show Skins", false, showSkins);
 
 		// Edit the original message to show the new page
-		event.getHook().editOriginalEmbeds(arcanumEmbed).setComponents(ActionRow.of(prevButton, nextButton)).queue();
+		event.getHook().editOriginalEmbeds(arcanumEmbed)
+				.setComponents(ActionRow.of(prevButton, nextButton, toggleSkinsButton)).queue();
 	}
 
 	private Button createArcanumButton(String action, int pageIndex, String originalMsgId, String label,
-			boolean isDisabled) {
-		return isDisabled ? Button.primary(action + ":" + pageIndex + ":" + originalMsgId, label).asDisabled()
-				: Button.primary(action + ":" + pageIndex + ":" + originalMsgId, label);
+			boolean isDisabled, boolean showSkins) {
+		String customId = String.format("%s:%d:%s:%b", action, pageIndex, originalMsgId, showSkins);
+		return isDisabled ? Button.primary(customId, label).asDisabled() : Button.primary(customId, label);
+	}
+
+	private Button createArcanumSecondaryButton(String action, int pageIndex, String originalMsgId, String label,
+			boolean isDisabled, boolean showSkins) {
+		String customId = String.format("%s:%d:%s:%b", action, pageIndex, originalMsgId, showSkins);
+		return isDisabled ? Button.secondary(customId, label).asDisabled() : Button.secondary(customId, label);
 	}
 
 	// Get the total count of caught champions for pagination
@@ -131,14 +144,22 @@ public class ArcanumService {
 		List<CaughtChampion> champions = getCaughtChampions(user.getId(), 0);
 		long totalChampions = getTotalCaughtChampions(user.getId());
 		boolean isLastPage = 1 >= Math.ceil((double) totalChampions / PAGE_SIZE);
-		MessageEmbed arcanumEmbed = generateArcanumEmbed(champions, 0, totalChampions);
+
+		// Initialize the embed without showing skins (last parameter is `false`)
+		MessageEmbed arcanumEmbed = generateArcanumEmbed(champions, 0, totalChampions, false);
 
 		// Generate Arcanum pagination buttons
-		Button prevButton = createArcanumButton("arcanum_page", 0, event.getMessageId(), "Previous", true);
-		Button nextButton = createArcanumButton("arcanum_page", 1, event.getMessageId(), "Next", isLastPage);
+		// Include the showSkins state as `false` for these buttons
+		Button prevButton = createArcanumButton("arcanum_page", 0, event.getMessageId(), "Previous", true, false);
+		Button nextButton = createArcanumButton("arcanum_page", 1, event.getMessageId(), "Next", isLastPage, false);
+
+		// New "Show Skins" button, initially set to `false`
+		Button showSkinsButton = createArcanumSecondaryButton("toggle_skins", 0, event.getMessageId(), "Show Skins",
+				false, false);
 
 		// Send the initial arcanum embed
-		event.getChannel().sendMessageEmbeds(arcanumEmbed).setComponents(ActionRow.of(prevButton, nextButton)).queue();
+		event.getChannel().sendMessageEmbeds(arcanumEmbed)
+				.setComponents(ActionRow.of(prevButton, nextButton, showSkinsButton)).queue();
 
 		// Store user ID in Redis
 		redisManager.setExpiringKey(event.getMessageId() + ":startCommandUser", event.getAuthor().getId(), 300);
