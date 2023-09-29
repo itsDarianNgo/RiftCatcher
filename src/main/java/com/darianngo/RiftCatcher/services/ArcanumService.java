@@ -48,19 +48,33 @@ public class ArcanumService {
 
 		StringBuilder sb = new StringBuilder();
 		int startIdx = pageIndex * PAGE_SIZE; // Calculate the starting index based on current page index
+
+		// Calculate the max length of champion names for this page
+		int maxNameLength = champions.stream().map(champ -> champ.getChampion().getName().length())
+				.max(Integer::compare).orElse(0);
 		for (int i = 0; i < champions.size(); i++) {
 			CaughtChampion champ = champions.get(i);
 			int number = startIdx + i + 1; // Start from the correct index, not always from 1
-			String emoteId = champ.getChampion().getEmoteId();
-			String emote = emoteId != null ? "<:_:" + emoteId + ">" : ":_:";
+			String emoteId = champ.getChampion().getEmoteId(); // Assuming you have the getter for Emote ID
+			String emote = emoteId != null ? "<:__:" + emoteId + ">" : ":__:";
+			String skin = champ.getSkin().getName(); // Assuming you have the getter for Skin name
 
 			double perfectIVPercentage = calculatePerfectIVPercentage(champ.getIvs());
 
-			// Use `String.format` for better control over formatting
-			sb.append(String.format("`%-2d`", number)).append("　").append(emote).append(" ")
-					.append(String.format("%-10s", champ.getChampion().getName())).append("　•　").append("Lvl. ")
-					.append(String.format("%-2d", champ.getLevel())).append("　•　")
-					.append(String.format("%.2f%%", perfectIVPercentage)).append("\n");
+			// Create a formatted string for the champion number with extra spacing
+			String numPart = String.format("`%-3d`" + "　", number);
+
+			// Create a formatted string for the champion name with extra spacing
+			String namePart = String.format("`%-15s`" + "　" + "•" + "　", champ.getChampion().getName());
+
+			// Create the rest of the string outside the inline code block
+			String restOfRow = String.format("`Lvl. %-3d`" + "　" + "•" + "　" + "`%.2f%%`", champ.getLevel(),
+					perfectIVPercentage);
+
+			// Combine them together with the emote
+			String row = numPart + emote + namePart + "    " + restOfRow;
+
+			sb.append(row).append("\n");
 		}
 
 		// Correctly showing entries
