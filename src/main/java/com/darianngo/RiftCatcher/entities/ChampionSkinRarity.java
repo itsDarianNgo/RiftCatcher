@@ -1,6 +1,5 @@
 package com.darianngo.RiftCatcher.entities;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -14,5 +13,7 @@ public class ChampionSkinRarity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	private String emoteId;
+	private String serverId;
 	private String rarity; // Common, Rare, Epic, Legendary, Mythic, Ultimate
 }

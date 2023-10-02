@@ -53,9 +53,14 @@ public class ArcanumService {
 		for (int i = 0; i < champions.size(); i++) {
 			CaughtChampion champ = champions.get(i);
 			int number = startIdx + i + 1; // Start from the correct index, not always from 1
-			String emoteId = champ.getChampion().getEmoteId(); // Assuming you have the getter for Emote ID
+			String emoteId = champ.getChampion().getEmoteId();
 			String emote = emoteId != null ? "<:__:" + emoteId + ">" : ":__:";
-			String skin = champ.getSkin().getName(); // Assuming you have the getter for Skin name
+			String skin = champ.getSkin().getName();
+			String skinRarityEmote = "";
+			if (!"DEFAULT".equals(champ.getSkin().getSkinRarity().getRarity())) {
+				String rarityEmoteId = champ.getSkin().getSkinRarity().getEmoteId();
+				skinRarityEmote = rarityEmoteId != null ? "<:__:" + rarityEmoteId + ">" : ":__:";
+			}
 
 			double perfectIVPercentage = calculatePerfectIVPercentage(champ.getIvs());
 
@@ -66,16 +71,16 @@ public class ArcanumService {
 			String namePart = String.format("`%-15s`" + "　" + "•" + "　", champ.getChampion().getName());
 
 			// Create the rest of the string outside the inline code block
-			String restOfRow = String.format("`Lvl. %-3d`" + "　" + "•" + "　" + "`%.2f%%`", champ.getLevel(),
-					perfectIVPercentage);
+			String restOfRow = String.format("`Lvl. %-3d`" + "　" + "•" + "　" + "`%s%%`", champ.getLevel(),
+					String.format("%05.2f", perfectIVPercentage));
 
 			// Combine them together with the emote
 			String row = numPart + emote + namePart + "    " + restOfRow;
 
-			if (showSkins) {
-				// Add skins to your row if `showSkins` is true
+			if (showSkins && !"DEFAULT".equals(champ.getSkin().getName().toUpperCase())) {
+				// Add skins to your row if `showSkins` is true and the skin is not "Default"
 				String skinPart = String.format("`%-15s`", champ.getSkin().getName());
-				row += "　•　" + skinPart;
+				row += "　•　" + skinRarityEmote + skinPart;
 			}
 
 			sb.append(row).append("\n");
@@ -188,6 +193,9 @@ public class ArcanumService {
 
 		// Calculate the percentage of perfection
 		double perfectIVPercentage = ((double) totalActualIv / totalMaxIv) * 100;
+
+		// Round to 2 decimal places
+		perfectIVPercentage = Math.round(perfectIVPercentage * 100.0) / 100.0;
 
 		return perfectIVPercentage;
 	}
