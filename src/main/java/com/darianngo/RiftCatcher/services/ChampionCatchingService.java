@@ -175,7 +175,6 @@ public class ChampionCatchingService {
 
 	private void incrementUserChampionCaughtCount(String userId) {
 		User user = userRepository.findByDiscordId(userId);
-		// Assuming you have a championCaught field in the User entity
 		user.setChampionsCaught(user.getChampionsCaught() + 1);
 		userRepository.save(user);
 	}
@@ -188,6 +187,8 @@ public class ChampionCatchingService {
 		Set<Rune> uniqueRunes = assignTwoUniqueRunes();
 		IVs championIVs = championAttributesService.generateIVs();
 		int randomLevel = levelingService.getRandomChampionLevel();
+		double initialXp = levelingService.currentXpForLevel(randomLevel);
+		double xpToNextLevel = levelingService.xpRequiredForNextLevel(randomLevel);
 
 		caughtChampion.setUser(userRepository.findByDiscordId(userId));
 		caughtChampion.setChampion(champion);
@@ -195,8 +196,14 @@ public class ChampionCatchingService {
 		caughtChampion.setNature(nature);
 		caughtChampion.setSummonerSpells(uniqueSummonerSpells);
 		caughtChampion.setLevel(randomLevel);
+		caughtChampion.setCurrentExperience(initialXp);
+		caughtChampion.setExperienceToNextLevel(xpToNextLevel);
+		System.out.println("XP to next level: " + xpToNextLevel);
+
 		caughtChampion.setIvs(championIVs);
 		caughtChampion.setCaughtAt(LocalDateTime.now());
+
+		championAttributesService.calculateAndSetChampionStats(caughtChampion);
 
 		// Save the CaughtChampion first so it gets an ID
 		caughtChampion = caughtChampionRepository.save(caughtChampion);

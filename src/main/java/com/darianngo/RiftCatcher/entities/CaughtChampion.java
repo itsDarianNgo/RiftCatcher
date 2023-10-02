@@ -53,8 +53,8 @@ public class CaughtChampion {
 	@JoinColumn(name = "skin_id")
 	private ChampionSkin skin;
 	private Integer level = 1;
-	private Integer currentExperience = 0;
-	private Integer experienceToNextLevel;
+	private Double currentExperience = 0.0;
+	private Double experienceToNextLevel;
 
 	@OneToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "ivs_id")

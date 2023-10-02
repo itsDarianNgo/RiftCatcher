@@ -18,7 +18,7 @@ public class LevelingService {
 
 	private Map<Integer, Double> xpCache = new HashMap<>(); // Cache to store XP requirements for levels
 
-	private static final double LAMBDA = 0.05;
+	private static final double LAMBDA = 0.2;
 	private static final int MAX_LEVEL = 100;
 	private static List<Double> cdf = new ArrayList<>();
 
@@ -51,6 +51,17 @@ public class LevelingService {
 			totalXp += xpRequiredForLevel(i);
 		}
 		return totalXp;
+	}
+
+	public double currentXpForLevel(int level) {
+		if (level <= 1) {
+			return 0; // Assume 0 XP for level 1
+		}
+		return cumulativeXpForLevel(level) - cumulativeXpForLevel(level - 1);
+	}
+
+	public double xpRequiredForNextLevel(int currentLevel) {
+		return xpRequiredForLevel(currentLevel + 1);
 	}
 
 	public int getLevelFromXp(double currentXp) {
